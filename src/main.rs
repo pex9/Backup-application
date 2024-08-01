@@ -1,18 +1,16 @@
-mod config_gui; // Declare the module
+mod backup;
+mod config_gui;
+mod confirm_gui;
 mod utils;
 
 use std::error::Error;
 
-mod confirm_gui;
 use config_gui::MyApp;
 
-use confirm_gui::ConfirmGui;
 use config_gui::run_config_gui;
-use emergency_backup::utils::auto_launch_app;
 
-
+use confirm_gui::{run_confirm_gui, Choice};
 use std::thread;
-use confirm_gui::{Choice, run_confirm_gui};
 
 /* run the confirmation gui
 fn main() {
@@ -57,7 +55,7 @@ fn main(){
 */
 /* //use to run the back up function and write the corrispond log at the end of the operation
 
- */
-fn main(){
-
+*/
+fn main() {
+    let backupper = backup::Backupper::new();
 }
