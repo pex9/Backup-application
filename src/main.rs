@@ -1,6 +1,9 @@
+use std::thread;
+use std::time::Duration;
 use mouse_track::types::Point;
 use mouse_track::Mouse;
 use winit::event_loop;
+
 
 fn main() {
     let event_loop = event_loop::EventLoop::new();
@@ -13,7 +16,15 @@ fn main() {
     loop {
 
         if (mouse.get_position().unwrap() == Point{x:0,y:0}) {
-            mouse.rectangle_write(0, 0, w-1, h-1).unwrap();
+            match mouse.rectangle_write(0, 0, w-1, h-1) {
+                Ok(flag) => {
+                    if flag == true {
+                        thread::sleep(Duration::from_secs(2));
+                        mouse.confirm().unwrap();
+                    }
+                }
+                Err(_) => {}
+            }
             break;
         }
     }

@@ -3,6 +3,29 @@ use std::sync::Arc;
 use crate::types::keys::Keys;
 use crate::{sys, types::Point};
 
+#[derive(Debug, Clone, Copy)]
+pub enum Direction {
+    Positive, 
+    Negative
+}
+
+impl PartialEq for Direction {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Direction::Positive => match other {
+                Direction::Positive => true,
+                Direction::Negative => false
+            },
+            Direction::Negative => match other {
+                Direction::Negative => true,
+                Direction::Positive => false
+            }
+        }
+    }
+}
+
+impl Eq for Direction {}
+
 pub struct Rectangle<'a> {
     x: i32,
     y: i32,
@@ -75,6 +98,74 @@ impl<'a> Drop for Rectangle<'a> {
     fn drop(&mut self) {}
 }
 
+pub struct Confirm<'a> {
+    mouse: Arc<&'a mut Mouse>,
+}
+
+impl<'a> Confirm<'a> {
+    pub fn new(mouse: Arc<&'a mut Mouse>) -> Self {
+        Confirm {
+            mouse
+        }
+    }
+
+
+    pub fn confirm(&mut self) -> bool {
+        let tol = 20;
+        let mut prec = self.mouse.get_position().unwrap();
+        let mut history = Vec::<Direction>::new();
+        let mut last: Option<Direction> = None;
+        loop {
+            let pos = self.mouse.get_position().unwrap();
+            // if pos.x-prec.x>=0 {
+            if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < tol && pos.x+prec.y-pos.y-prec.x > -tol {
+                // println!("{} - {}: {}", pos.y, prec.y, pos.y-prec.y);       // Debugging
+                // Positive
+                if pos.y-prec.y<0 {
+                    match last {
+                        Some(dir) => match dir {
+                            Direction::Positive => {},
+                            Direction::Negative => history.push(Direction::Positive)
+                        }
+                        None => {
+                            history.push(Direction::Positive);
+                        }
+                    }
+                }
+                else if pos.y-prec.y>0 {
+                    match last {
+                        Some(dir) => match dir {
+                            Direction::Negative => {},
+                            Direction::Positive => history.push(Direction::Negative)
+                        }
+                        None => {
+                            history.push(Direction::Negative);
+                        }
+                    }
+                }
+            } 
+            else {
+                last = None;
+                history.clear();
+            }
+
+            if history.len() == 2 {
+                if history[0] == Direction::Positive && history[1] == Direction::Negative {
+                    return true;
+                }
+                else if history[0] == Direction::Negative && history[1] == Direction::Positive {
+                    return false;
+                }
+                else {
+                    last = None;
+                    history.clear();
+                }
+            }
+            prec = pos;
+        }
+    }  
+}
+
 pub struct Mouse(sys::Mouse);
 
 #[allow(unreachable_code, unused_variables)]
@@ -116,11 +207,23 @@ impl Mouse {
     }
 
     // Wrapper to verify the rectangle is drawn, then we can start the backup
-    pub fn rectangle_write(&mut self, x: i32, y: i32, width: i32, height: i32) -> Result<(), Box<dyn std::error::Error>> {
-        let mut rect = Rectangle::new(Arc::clone(&Arc::new(self)), width, height);
-        match rect.draw_rectangle() {
+    pub fn rectangle_write(&mut self, x: i32, y: i32, width: i32, height: i32) -> Result<bool, Box<dyn std::error::Error>> {
+        let data =  Arc::new(self);
+        let mut rect = Rectangle::new(Arc::clone(&data), width, height);
+        let res = rect.draw_rectangle();
+        match res {
             true => println!("Rectangle drawn"),                        // In final version, we will start the backup here
             false => println!("We weren't drawing the rectangle")       // In final version, we will do nothing here
+        }
+        Ok(res)
+    }
+
+    pub fn confirm(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let data = Arc::new(self);
+        let mut conf = Confirm::new(Arc::clone(&data));
+        match conf.confirm() {
+            true => println!("Confirmed"),                              // In final version, we will confirm the backup here
+            false => println!("We weren't confirming")                  // In final version, we will cancel the backup here
         }
         Ok(())
     }
