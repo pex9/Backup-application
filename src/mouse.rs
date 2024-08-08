@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::types::keys::Keys;
 use crate::{sys, types::Point};
 
+const TOL: i32 = 50;
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Positive, 
@@ -51,12 +52,11 @@ impl<'a> Rectangle<'a> {
     }
 
     pub fn draw_rectangle(&mut self) -> bool {
-        let tol = 20;
         let mut flag = true;
         
         // Left -> Right
         while self.mouse.get_position().unwrap().x < self.x + self.width && flag==true {
-            match self.mouse.get_position().unwrap().y < self.y + tol && self.mouse.get_position().unwrap().y > self.y - tol {
+            match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
                 true => {},
                 false => flag = false 
             }
@@ -65,7 +65,7 @@ impl<'a> Rectangle<'a> {
 
         // Up -> Down
         while self.mouse.get_position().unwrap().y < self.y + self.height && flag==true{
-            match self.mouse.get_position().unwrap().x < self.x + tol && self.mouse.get_position().unwrap().x > self.x - tol {
+            match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
                 true => {},
                 false => flag = false
             }
@@ -74,7 +74,7 @@ impl<'a> Rectangle<'a> {
         
         // Right -> Left
         while self.mouse.get_position().unwrap().x > self.x-self.width && flag==true {
-            match self.mouse.get_position().unwrap().y < self.y + tol && self.mouse.get_position().unwrap().y > self.y - tol {
+            match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
                 true => {},
                 false => flag = false
             }
@@ -83,7 +83,7 @@ impl<'a> Rectangle<'a> {
 
         // Down -> Up
         while self.mouse.get_position().unwrap().y > self.y-self.height && flag==true {
-            match self.mouse.get_position().unwrap().x < self.x + tol && self.mouse.get_position().unwrap().x > self.x - tol {
+            match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
                 true => {},
                 false => flag = false
             }
@@ -111,24 +111,28 @@ impl<'a> Confirm<'a> {
 
 
     pub fn confirm(&mut self) -> bool {
-        let tol = 20;
         let mut prec = self.mouse.get_position().unwrap();
         let mut history = Vec::<Direction>::new();
         let mut last: Option<Direction> = None;
         loop {
             let pos = self.mouse.get_position().unwrap();
             // if pos.x-prec.x>=0 {
-            if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < tol && pos.x+prec.y-pos.y-prec.x > -tol {
+            if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
                 // println!("{} - {}: {}", pos.y, prec.y, pos.y-prec.y);       // Debugging
                 // Positive
                 if pos.y-prec.y<0 {
                     match last {
                         Some(dir) => match dir {
-                            Direction::Positive => {},
-                            Direction::Negative => history.push(Direction::Positive)
+                            Direction::Positive => {
+                            },
+                            Direction::Negative => {
+                                history.push(Direction::Positive);
+                                last = Option::from(Direction::Positive);
+                            }
                         }
                         None => {
                             history.push(Direction::Positive);
+                            last = Option::from(Direction::Positive);
                         }
                     }
                 }
@@ -136,10 +140,14 @@ impl<'a> Confirm<'a> {
                     match last {
                         Some(dir) => match dir {
                             Direction::Negative => {},
-                            Direction::Positive => history.push(Direction::Negative)
+                            Direction::Positive => {
+                                history.push(Direction::Negative);
+                                last = Option::from(Direction::Negative);
+                            }
                         }
                         None => {
                             history.push(Direction::Negative);
+                            last = Option::from(Direction::Negative);
                         }
                     }
                 }
@@ -156,10 +164,10 @@ impl<'a> Confirm<'a> {
                 else if history[0] == Direction::Negative && history[1] == Direction::Positive {
                     return false;
                 }
-                else {
+                /*else {
                     last = None;
                     history.clear();
-                }
+                }*/
             }
             prec = pos;
         }
