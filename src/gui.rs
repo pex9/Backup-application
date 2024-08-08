@@ -1,180 +1,206 @@
+use eframe::egui;
+use eframe::egui::{ColorImage, TextureHandle};
+use std::error::Error;
+use std::fs::{File};
+use std::io::{BufRead, BufReader, Write};
+use image::imageops;
+use image::imageops::FilterType;
+use rfd::FileDialog;
 
-/*
-pub struct Option {
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum FileExtension {
+    Txt,
+    Pdf,
+    Png,
+    Jpg,
+    Mp4,
+    All,
+}
+
+impl FileExtension {
+    fn all() -> &'static [FileExtension] {
+        &[
+            FileExtension::All,
+            FileExtension::Txt,
+            FileExtension::Pdf,
+            FileExtension::Png,
+            FileExtension::Jpg,
+            FileExtension::Mp4,
+        ]
+    }
+
+    fn to_string(&self) -> &'static str {
+        match self {
+            FileExtension::Txt => "txt",
+            FileExtension::Pdf => "pdf",
+            FileExtension::Png => "png",
+            FileExtension::Jpg => "jpg",
+            FileExtension::Mp4 => "mp4",
+            FileExtension::All => "All",
+        }
+    }
+
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "All" => Some(FileExtension::All),
+            "txt" => Some(FileExtension::Txt),
+            "pdf" => Some(FileExtension::Pdf),
+            "png" => Some(FileExtension::Png),
+            "jpg" => Some(FileExtension::Jpg),
+            "mp4" => Some(FileExtension::Mp4),
+            _ => None,
+        }
+    }
+}
+
+
+pub struct MyApp {
     source: String,
     destination: String,
-    extensions: Vec<String>
-}
-*/
-#[derive(Debug)]
-pub struct CodeExample {
-    name: String,
-    age: u32,
+    texture: Option<TextureHandle>,
+    selected_extensions: Vec<FileExtension>,
 }
 
-impl Default for CodeExample {
-    fn default() -> Self {
-        Self {
-            name: "Arthur".to_owned(),
-            age: 42,
+impl MyApp {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut app = Self {
+            source: "".to_string(),
+            destination: "".to_string(),
+            texture: Self::load_image_texture(cc, "assets/backup-file.png", (100, 100)),
+            selected_extensions: Vec::new(),
+        };
+
+        // Load previously saved information
+        app.load_info();
+        app
+    }
+
+    fn load_image_texture(
+        cc: &eframe::CreationContext<'_>,
+        path: &str,
+        size: (u32, u32),
+    ) -> Option<TextureHandle> {
+        let mut image = match image::open(path) {
+            Ok(image) => image.to_rgba8(),
+            Err(err) => {
+                eprintln!("Failed to load image: {:?}", err);
+                return None;
+            }
+        };
+
+        image = imageops::resize(&image, size.0, size.1, FilterType::Lanczos3);
+        let color_image = ColorImage::from_rgba_unmultiplied([size.0 as usize, size.1 as usize], &image);
+
+        Some(cc.egui_ctx.load_texture("backup-file", color_image, Default::default()))
+    }
+
+    fn save_info(&self) -> Result<(), Box<dyn Error>> {
+        let path = "config/backup_info.txt";
+        let mut file = File::create(path)?;
+
+        writeln!(file, "Source: {}", self.source)?;
+        writeln!(file, "Destination: {}", self.destination)?;
+
+        // Write selected extensions
+        for ext in &self.selected_extensions {
+            writeln!(file, "{}", ext.to_string())?;
+        }
+
+        Ok(())
+    }
+
+    fn load_info(&mut self) {
+        let path = "config/backup_info.txt";
+        if let Ok(file) = File::open(path) {
+            let reader = BufReader::new(file);
+            for (i, line) in reader.lines().enumerate() {
+                if let Ok(line) = line {
+                    if i == 0 {
+                        if line.starts_with("Source: ") {
+                            self.source = line["Source: ".len()..].to_string();
+                        }
+                    } else if i == 1 {
+                        if line.starts_with("Destination: ") {
+                            self.destination = line["Destination: ".len()..].to_string();
+                        }
+                    } else {
+                        if let Some(ext) = FileExtension::from_str(&line) {
+                            self.selected_extensions.push(ext);
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-impl CodeExample {
-    fn samples_in_grid(&mut self, ui: &mut egui::Ui) {
-        // Note: we keep the code narrow so that the example fits on a mobile screen.
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.heading("Backup application");
 
-        let Self { name, age } = self; // for brevity later on
+                if let Some(texture) = &self.texture {
+                    ui.image(texture, texture.size_vec2());
+                } else {
+                    ui.label("Failed to load image.");
+                }
 
-        show_code(ui, r#"ui.heading("Example");"#);
-        ui.heading("Example");
-        ui.end_row();
+                ui.label("Select a source folder for backup:");
+                if ui.button("Source Folder").clicked() {
+                    if let Some(folder) = FileDialog::new().pick_folder() {
+                        self.source = folder.display().to_string();
+                    }
+                }
+                ui.label(format!("Selected Source folder: {}", self.source));
 
-        show_code(
-            ui,
-            r#"
-            ui.horizontal(|ui| {
-                ui.label("Name");
-                ui.text_edit_singleline(name);
-            });"#,
-        );
-        // Putting things on the same line using ui.horizontal:
-        ui.horizontal(|ui| {
-            ui.label("Name");
-            ui.text_edit_singleline(name);
-        });
-        ui.end_row();
+                ui.label("Select a destination folder for backup:");
+                if ui.button("Destination Folder").clicked() {
+                    if let Some(folder) = FileDialog::new().pick_folder() {
+                        self.destination = folder.display().to_string();
+                    }
+                }
+                ui.label(format!("Selected Destination folder: {}", self.destination));
 
-        show_code(
-            ui,
-            r#"
-            ui.add(
-                egui::DragValue::new(age)
-                    .range(0..=120)
-                    .suffix(" years"),
-            );"#,
-        );
-        ui.add(egui::DragValue::new(age).range(0..=120).suffix(" years"));
-        ui.end_row();
+                ui.label("Select file extensions to backup:");
 
-        show_code(
-            ui,
-            r#"
-            if ui.button("Increment").clicked() {
-                *age += 1;
-            }"#,
-        );
-        if ui.button("Increment").clicked() {
-            *age += 1;
-        }
-        ui.end_row();
+                for extension in FileExtension::all() {
+                    let mut selected = self.selected_extensions.contains(extension);
+                    if ui.checkbox(&mut selected, extension.to_string()).clicked() {
+                        if selected {
+                            if extension.to_string() == "All".to_string() {
+                                for extension in FileExtension::all() {
+                                    if !self.selected_extensions.contains(&*extension)
+                                    {
+                                        self.selected_extensions.push(*extension);
+                                    }
+                                }
+                            } else {
+                                self.selected_extensions.push(*extension);
+                            }
+                        } else {
+                            if extension.to_string() == "All".to_string() {
+                                for extension in FileExtension::all() {
+                                    self.selected_extensions.retain(|&ext| ext != *extension);
+                                }
+                            } else {
+                                self.selected_extensions.retain(|&ext| ext != *extension);
+                            }
+                        }
+                    }
+                }
 
-        show_code(ui, r#"ui.label(format!("{name} is {age}"));"#);
-        ui.label(format!("{name} is {age}"));
-        ui.end_row();
-    }
 
-    fn code(&mut self, ui: &mut egui::Ui) {
-        show_code(
-            ui,
-            r"
-pub struct CodeExample {
-    name: String,
-    age: u32,
-}
-
-impl CodeExample {
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        // Saves us from writing `&mut self.name` etc
-        let Self { name, age } = self;",
-        );
-
-        ui.horizontal(|ui| {
-            let font_id = egui::TextStyle::Monospace.resolve(ui.style());
-            let indentation = 8.0 * ui.fonts(|f| f.glyph_width(&font_id, ' '));
-            let item_spacing = ui.spacing_mut().item_spacing;
-            ui.add_space(indentation - item_spacing.x);
-
-            egui::Grid::new("code_samples")
-                .striped(true)
-                .num_columns(2)
-                .show(ui, |ui| {
-                    self.samples_in_grid(ui);
-                });
-        });
-
-        crate::rust_view_ui(ui, "    }\n}");
-    }
-}
-
-impl crate::Demo for CodeExample {
-    fn name(&self) -> &'static str {
-        "🖮 Code Example"
-    }
-
-    fn show(&mut self, ctx: &egui::Context, open: &mut bool) {
-        use crate::View;
-        egui::Window::new(self.name())
-            .open(open)
-            .min_width(375.0)
-            .default_size([390.0, 500.0])
-            .scroll(false)
-            .resizable([true, false])
-            .show(ctx, |ui| self.ui(ui));
-    }
-}
-
-impl crate::View for CodeExample {
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        ui.scope(|ui| {
-            ui.spacing_mut().item_spacing = egui::vec2(8.0, 8.0);
-            self.code(ui);
-        });
-
-        ui.separator();
-
-        crate::rust_view_ui(ui, &format!("{self:#?}"));
-
-        ui.separator();
-
-        let mut theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ui.ctx());
-        ui.collapsing("Theme", |ui| {
-            theme.ui(ui);
-            theme.store_in_memory(ui.ctx());
-        });
-
-        ui.separator();
-
-        ui.vertical_centered(|ui| {
-            ui.add(crate::egui_github_link_file!());
+                if ui.button("Save options").clicked() {
+                    match self.save_info() {
+                        Ok(_) => ui.label("Info saved successfully."),
+                        Err(e) => ui.label(format!("Failed to save info: {:?}", e)),
+                    };
+                }
+                if ui.button("Close Window").clicked() {
+                    _frame.close(); // Request to close the window
+                }
+            });
         });
     }
-}
-
-fn show_code(ui: &mut egui::Ui, code: &str) {
-    let code = remove_leading_indentation(code.trim_start_matches('\n'));
-    crate::rust_view_ui(ui, &code);
-}
-
-fn remove_leading_indentation(code: &str) -> String {
-    fn is_indent(c: &u8) -> bool {
-        matches!(*c, b' ' | b'\t')
-    }
-
-    let first_line_indent = code.bytes().take_while(is_indent).count();
-
-    let mut out = String::new();
-
-    let mut code = code;
-    while !code.is_empty() {
-        let indent = code.bytes().take_while(is_indent).count();
-        let start = first_line_indent.min(indent);
-        let end = code
-            .find('\n')
-            .map_or_else(|| code.len(), |endline| endline + 1);
-        out += &code[start..end];
-        code = &code[end..];
-    }
-    out
 }

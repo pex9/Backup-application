@@ -1,2 +1,5 @@
-Source: C:\Users\david\OneDrive - Politecnico di Torino\Documenti\MATLAB
-Destination: C:\Users\david\OneDrive - Politecnico di Torino\Desktop\BORSA DI STUDIO
+Source: C:\Users\david\OneDrive - Politecnico di Torino\Immagini\Screenshot
+Destination: C:\Users\david\OneDrive - Politecnico di Torino\Davide PoliTo\2 Anno 2021-2022 Completato\Cv
+txt
+pdf
+mp4
