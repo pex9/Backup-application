@@ -27,3 +27,10 @@ targets = ["x86_64-pc-windows-msvc", "i686-pc-windows-msvc"]
 
 [dependencies]
 winit = "0.28"
+eframe = "0.19"
+egui = "0.19"
+egui_extras = "0.19"
+env_logger = "0.9"
+log = "0.4"
+rfd = "0.12"
+image = "0.25.2"

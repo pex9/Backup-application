@@ -230,7 +230,7 @@ impl Mouse {
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
         match conf.confirm() {
-            true => println!("Confirmed"),                              // In final version, we will confirm the backup here
+            true => println!("Confirmed"),                              // In final version, we will confirm the backup here gui to insert and activate backup
             false => println!("We weren't confirming")                  // In final version, we will cancel the backup here
         }
         Ok(())

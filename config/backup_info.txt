@@ -1,0 +1,2 @@
+Source: C:\Users\david\OneDrive - Politecnico di Torino\Documenti\MATLAB
+Destination: C:\Users\david\OneDrive - Politecnico di Torino\Desktop\BORSA DI STUDIO
