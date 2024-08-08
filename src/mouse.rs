@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use crate::types::keys::Keys;
-use crate::{sys, types::Point};
+use crate::{sys, types::Confirm, types::Point, types::Rectangle};
+use std::sync::Arc;
 
 const TOL: i32 = 50;
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
-    Positive, 
-    Negative
+    Positive,
+    Negative,
 }
 
 impl PartialEq for Direction {
@@ -15,12 +14,12 @@ impl PartialEq for Direction {
         match self {
             Direction::Positive => match other {
                 Direction::Positive => true,
-                Direction::Negative => false
+                Direction::Negative => false,
             },
             Direction::Negative => match other {
                 Direction::Negative => true,
-                Direction::Positive => false
-            }
+                Direction::Positive => false,
+            },
         }
     }
 }
@@ -42,7 +41,7 @@ impl<'a> Rectangle<'a> {
             y: mouse.get_position().unwrap().y,
             mouse,
             width,
-            height
+            height,
         }
     }
 
@@ -53,42 +52,50 @@ impl<'a> Rectangle<'a> {
 
     pub fn draw_rectangle(&mut self) -> bool {
         let mut flag = true;
-        
+
         // Left -> Right
-        while self.mouse.get_position().unwrap().x < self.x + self.width && flag==true {
-            match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
-                true => {},
-                false => flag = false 
+        while self.mouse.get_position().unwrap().x < self.x + self.width && flag == true {
+            match self.mouse.get_position().unwrap().y < self.y + TOL
+                && self.mouse.get_position().unwrap().y > self.y - TOL
+            {
+                true => {}
+                false => flag = false,
             }
         }
         self.set_position(self.x + self.width, self.y);
 
         // Up -> Down
-        while self.mouse.get_position().unwrap().y < self.y + self.height && flag==true{
-            match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
-                true => {},
-                false => flag = false
+        while self.mouse.get_position().unwrap().y < self.y + self.height && flag == true {
+            match self.mouse.get_position().unwrap().x < self.x + TOL
+                && self.mouse.get_position().unwrap().x > self.x - TOL
+            {
+                true => {}
+                false => flag = false,
             }
         }
         self.set_position(self.x, self.y + self.height);
-        
+
         // Right -> Left
-        while self.mouse.get_position().unwrap().x > self.x-self.width && flag==true {
-            match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
-                true => {},
-                false => flag = false
+        while self.mouse.get_position().unwrap().x > self.x - self.width && flag == true {
+            match self.mouse.get_position().unwrap().y < self.y + TOL
+                && self.mouse.get_position().unwrap().y > self.y - TOL
+            {
+                true => {}
+                false => flag = false,
             }
         }
-        self.set_position(self.x-self.width, self.y);
+        self.set_position(self.x - self.width, self.y);
 
         // Down -> Up
-        while self.mouse.get_position().unwrap().y > self.y-self.height && flag==true {
-            match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
-                true => {},
-                false => flag = false
+        while self.mouse.get_position().unwrap().y > self.y - self.height && flag == true {
+            match self.mouse.get_position().unwrap().x < self.x + TOL
+                && self.mouse.get_position().unwrap().x > self.x - TOL
+            {
+                true => {}
+                false => flag = false,
             }
         }
-        self.set_position(self.x, self.y-self.height);
+        self.set_position(self.x, self.y - self.height);
 
         flag
     }
@@ -104,11 +111,8 @@ pub struct Confirm<'a> {
 
 impl<'a> Confirm<'a> {
     pub fn new(mouse: Arc<&'a mut Mouse>) -> Self {
-        Confirm {
-            mouse
-        }
+        Confirm { mouse }
     }
-
 
     pub fn confirm(&mut self) -> bool {
         let mut prec = self.mouse.get_position().unwrap();
@@ -117,42 +121,42 @@ impl<'a> Confirm<'a> {
         loop {
             let pos = self.mouse.get_position().unwrap();
             // if pos.x-prec.x>=0 {
-            if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
+            if pos.x - prec.x >= 0
+                && pos.x + prec.y - pos.y - prec.x < TOL
+                && pos.x + prec.y - pos.y - prec.x > -TOL
+            {
                 // println!("{} - {}: {}", pos.y, prec.y, pos.y-prec.y);       // Debugging
                 // Positive
-                if pos.y-prec.y<0 {
+                if pos.y - prec.y < 0 {
                     match last {
                         Some(dir) => match dir {
-                            Direction::Positive => {
-                            },
+                            Direction::Positive => {}
                             Direction::Negative => {
                                 history.push(Direction::Positive);
                                 last = Option::from(Direction::Positive);
                             }
-                        }
+                        },
                         None => {
                             history.push(Direction::Positive);
                             last = Option::from(Direction::Positive);
                         }
                     }
-                }
-                else if pos.y-prec.y>0 {
+                } else if pos.y - prec.y > 0 {
                     match last {
                         Some(dir) => match dir {
-                            Direction::Negative => {},
+                            Direction::Negative => {}
                             Direction::Positive => {
                                 history.push(Direction::Negative);
                                 last = Option::from(Direction::Negative);
                             }
-                        }
+                        },
                         None => {
                             history.push(Direction::Negative);
                             last = Option::from(Direction::Negative);
                         }
                     }
                 }
-            } 
-            else {
+            } else {
                 last = None;
                 history.clear();
             }
@@ -160,8 +164,7 @@ impl<'a> Confirm<'a> {
             if history.len() == 2 {
                 if history[0] == Direction::Positive && history[1] == Direction::Negative {
                     return true;
-                }
-                else if history[0] == Direction::Negative && history[1] == Direction::Positive {
+                } else if history[0] == Direction::Negative && history[1] == Direction::Positive {
                     return false;
                 }
                 /*else {
@@ -171,7 +174,7 @@ impl<'a> Confirm<'a> {
             }
             prec = pos;
         }
-    }  
+    }
 }
 
 pub struct Mouse(sys::Mouse);
@@ -202,7 +205,7 @@ impl Mouse {
     pub fn get_position(&self) -> Result<Point, Box<dyn std::error::Error>> {
         self.0.get_position()
     }
-    
+
     // This will scroll the mouse, scroll down is negative, scroll up is positive
     pub fn wheel(&self, delta: i32) -> Result<(), Box<dyn std::error::Error>> {
         self.0.wheel(delta)
@@ -215,13 +218,19 @@ impl Mouse {
     }
 
     // Wrapper to verify the rectangle is drawn, then we can start the backup
-    pub fn rectangle_write(&mut self, x: i32, y: i32, width: i32, height: i32) -> Result<bool, Box<dyn std::error::Error>> {
-        let data =  Arc::new(self);
+    pub fn rectangle_write(
+        &mut self,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+    ) -> Result<bool, Box<dyn std::error::Error>> {
+        let data = Arc::new(self);
         let mut rect = Rectangle::new(Arc::clone(&data), width, height);
         let res = rect.draw_rectangle();
         match res {
-            true => println!("Rectangle drawn"),                        // In final version, we will start the backup here
-            false => println!("We weren't drawing the rectangle")       // In final version, we will do nothing here
+            true => println!("Rectangle drawn"), // In final version, we will start the backup here
+            false => println!("We weren't drawing the rectangle"), // In final version, we will do nothing here
         }
         Ok(res)
     }
@@ -230,8 +239,8 @@ impl Mouse {
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
         match conf.confirm() {
-            true => println!("Confirmed"),                              // In final version, we will confirm the backup here gui to insert and activate backup
-            false => println!("We weren't confirming")                  // In final version, we will cancel the backup here
+            true => println!("Confirmed"), // In final version, we will confirm the backup here gui to insert and activate backup
+            false => println!("We weren't confirming"), // In final version, we will cancel the backup here
         }
         Ok(())
     }
