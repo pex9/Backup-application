@@ -1,5 +1,7 @@
-Source: C:\Users\david\OneDrive - Politecnico di Torino\Immagini\Screenshot
+Source: C:\Users\david\OneDrive - Politecnico di Torino\Desktop\FOTO NAPOLI
 Destination: C:\Users\david\OneDrive - Politecnico di Torino\Davide PoliTo\2 Anno 2021-2022 Completato\Cv
+mp4
+jpg
+All
 txt
 pdf
-mp4

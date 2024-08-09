@@ -1,11 +1,16 @@
 use eframe::egui;
 use eframe::egui::{ColorImage, TextureHandle};
 use std::error::Error;
-use std::fs::{File};
+use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 use image::imageops;
 use image::imageops::FilterType;
 use rfd::FileDialog;
+use sysinfo::{Pid, System};
+use crate::utils::start_monitor;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum FileExtension {
@@ -63,6 +68,8 @@ pub struct MyApp {
 
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+
+        start_monitor();
         let mut app = Self {
             source: "".to_string(),
             destination: "".to_string(),
