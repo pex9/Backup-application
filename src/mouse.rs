@@ -272,4 +272,8 @@ impl Mouse {
     pub fn get_click_count(&self) -> u32 {
         CLICK_COUNT.load(Ordering::SeqCst)
     }
+
+    pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
+        self.0.is_pressed()
+    }
 }

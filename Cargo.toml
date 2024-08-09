@@ -41,3 +41,4 @@ serde_json = "1.0"
 auto-launch = "0.5.0"
 rebackup = "1.0.2"
 cpu-time = "1.0.0"
+winapi = { version = "0.3", features = ["winuser"] }
