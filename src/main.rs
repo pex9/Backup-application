@@ -1,50 +1,49 @@
-mod gui; // Declare the module
+mod config_gui; // Declare the module
 mod utils;
-use std::alloc::System;
-use std::env;
-use gui::MyApp; // Import the struct
+
 use std::error::Error;
-use std::fs::OpenOptions;
-use std::path::PathBuf;
-use std::time::Duration;
-use winapi::um::winreg::HKEY_CURRENT_USER;
-use winreg::RegKey;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+mod confirm_gui;
 
-    // Aggiungi l'applicazione all'avvio di Windows release
-    // add_to_startup()?;
+use confirm_gui::ConfirmGui;
+use config_gui::run_config_gui;
 
 
-    let options = eframe::NativeOptions {
-        initial_window_size: Some([740.0, 480.0].into()),
-        ..Default::default()
-    };
+use std::thread;
+use confirm_gui::{Choice, run_confirm_gui};
 
-    eframe::run_native(
-        "Back-up app",
-        options,
-        Box::new(|cc| Box::new(MyApp::new(cc))),
-    );
+/* run the confirmation gui
+fn main() {
+    let (sender, receiver) = std::sync::mpsc::channel();
 
-    Ok(())
-}
+    thread::spawn(move||{
+        match receiver.recv() {
+            Ok(choice) => {
+                match choice {
+                    Choice::Yes => {
+                        print!("1");
+                        std::process::exit(0);
+                    }
+                    Choice::No => {
+                        print!("2");
+                        std::process::exit(0);
+                    }
+                }
+            }
+            Err(_) => {
+                print!("3");
+                std::process::exit(0);
+            }
+        }
+    });
 
-/*
-// windows release
-fn add_to_startup() -> Result<(), Box<dyn std::error::Error>> {
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let path = r"Software\Microsoft\Windows\CurrentVersion\Run";
-    let (key, _disp) = hkcu.create_subkey(path)?;
+    run_confirm_gui(sender);
 
-    // Ottieni il percorso dell'eseguibile corrente
-    let exe_path: PathBuf = env::current_exe()?;
-    let exe_path_str = exe_path.to_str().unwrap();
-
-    // Aggiungi l'eseguibile al registro di Windows
-    key.set_value("NomeApp", &exe_path_str)?;
-
-    Ok(())
 }
  */
+
+// run the configuration gui
+fn main(){
+    run_config_gui().unwrap();
+}
+
