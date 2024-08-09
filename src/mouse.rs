@@ -1,6 +1,11 @@
 use crate::types::keys::Keys;
 use crate::{sys, types::Confirm, types::Point, types::Rectangle};
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicU32, Ordering},
+    Arc,
+};
+
+static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
 
 const TOL: i32 = 50;
 #[derive(Debug, Clone, Copy)]
@@ -193,6 +198,7 @@ impl Mouse {
 
     // Press the button of the mouse until it is released
     pub fn press<'a>(&self, button: &'a Keys) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        self.track_click();
         self.0.press(button)
     }
 
@@ -208,6 +214,10 @@ impl Mouse {
 
     // This will scroll the mouse, scroll down is negative, scroll up is positive
     pub fn wheel(&self, delta: i32) -> Result<(), Box<dyn std::error::Error>> {
+        println!(
+            "Clicking for the {:?} time",
+            CLICK_COUNT.load(Ordering::Relaxed)
+        );
         self.0.wheel(delta)
     }
 
@@ -243,5 +253,23 @@ impl Mouse {
             false => println!("We weren't confirming"), // In final version, we will cancel the backup here
         }
         Ok(())
+    }
+
+    fn on_three_clicks(&self) {
+        println!("Three clicks detected. Starting action...");
+        // Add code to start the desired action here
+    }
+
+    pub fn track_click(&self) {
+        let click_count = CLICK_COUNT.fetch_add(1, Ordering::SeqCst) + 1;
+
+        if click_count >= 3 {
+            self.on_three_clicks();
+            CLICK_COUNT.store(0, Ordering::SeqCst); // Reset click count
+        }
+    }
+
+    pub fn get_click_count(&self) -> u32 {
+        CLICK_COUNT.load(Ordering::SeqCst)
     }
 }

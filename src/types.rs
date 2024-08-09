@@ -153,6 +153,7 @@ impl<'a> Confirm<'a> {
                     // println!("Init: {}", self.init.unwrap());               // Debugging
                 }
                 // println!("{} - {}: {}", pos.y, prec.y, pos.y-prec.y);       // Debugging
+
                 // Positive
                 if pos.y-prec.y<0 {
                     match last {

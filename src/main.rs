@@ -6,6 +6,12 @@ mod config_gui;
 mod confirm_gui;
 mod utils;
 
+use config_gui::run_config_gui;
+use confirm_gui::ConfirmGui;
+
+use confirm_gui::{run_confirm_gui, Choice};
+use std::thread;
+
 /* run the confirmation gui
 fn main() {
     let (sender, receiver) = std::sync::mpsc::channel();
@@ -50,6 +56,4 @@ fn main(){
 /* //use to run the back up function and write the corrispond log at the end of the operation
 
 */
-fn main() {
-    perform_backup().unwrap();
-}
+fn main() {}
