@@ -12,10 +12,10 @@ use serde_json;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct MyApp {
-    source: String,
-    destination: String,
-    selected_extensions: Vec<String>,
-    excluded_directories: Vec<String>,
+    pub source: String,
+    pub destination: String,
+    pub selected_extensions: Vec<String>,
+    pub excluded_directories: Vec<String>,
 }
 
 impl MyApp {

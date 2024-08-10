@@ -39,6 +39,8 @@
 mod mouse;
 mod sys;
 pub mod types;
-mod utils;
+pub mod utils;
 
 pub use mouse::Mouse;
+pub mod config_gui;
+
