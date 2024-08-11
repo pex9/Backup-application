@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct BackupConfig {
     pub source: String,
     pub destination: String,
-    pub selected_extensions: Vec<String>,
+    pub excluded_extensions: Vec<String>,
     pub excluded_directories: Vec<String>,
     pub log_filename: String,
 }
@@ -16,7 +16,7 @@ impl BackupConfig {
         let mut app = Self {
             source: "".to_string(),
             destination: "".to_string(),
-            selected_extensions: Vec::new(),
+            excluded_extensions: Vec::new(),
             excluded_directories: Vec::new(),
             log_filename: "backup_log.txt".to_string(),
         };
@@ -43,13 +43,13 @@ impl BackupConfig {
                 Err(e) => {
                     eprintln!("Error loading JSON: {:?}", e);
                     // Handle JSON parsing errors by initializing with default values
-                    self.selected_extensions = Vec::new();
+                    self.excluded_extensions = Vec::new();
                     self.excluded_directories = Vec::new();
                 }
             }
         } else {
             // File does not exist; initialize with default values
-            self.selected_extensions = Vec::new();
+            self.excluded_extensions = Vec::new();
             self.excluded_directories = Vec::new();
         }
     }

@@ -39,7 +39,7 @@ impl Backupper {
 
     pub fn update_rules(&mut self) {
         let mut rules = Vec::new();
-        for ext in &self.backup_config.selected_extensions {
+        for ext in &self.backup_config.excluded_extensions {
             let e = ext.clone();
             rules.push(WalkerRule {
                 name: "",

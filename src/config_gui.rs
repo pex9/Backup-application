@@ -39,9 +39,9 @@ impl eframe::App for BackupConfig {
                 }
                 ui.add_space(3.0);
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let extensions_str = self.selected_extensions.join(";");
+                let extensions_str = self.excluded_extensions.join(";");
 
-                ui.label("Enter file extensions to backup (separated by ';'):");
+                ui.label("Enter file extensions to exclude from backup (separated by ';'):");
                 let mut input_extensions = extensions_str.clone();
                 ui.add_space(3.0);
                 ui.add(egui::TextEdit::multiline(&mut input_extensions)
@@ -51,7 +51,7 @@ impl eframe::App for BackupConfig {
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_extensions != extensions_str {
-                    self.selected_extensions = input_extensions.split(';')
+                    self.excluded_extensions = input_extensions.split(';')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
