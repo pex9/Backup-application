@@ -132,10 +132,6 @@ fn load_image_texture(
 pub fn run_config_gui() -> Result<(), Box<dyn Error>> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
-    // Aggiungi l'applicazione all'avvio di Windows release
-    // add_to_startup()?;
-
-
     let options = eframe::NativeOptions {
         initial_window_size: Some([640.0, 480.0].into()),
         drag_and_drop_support: false,

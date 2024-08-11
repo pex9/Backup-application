@@ -18,7 +18,7 @@ pub fn start_monitor() {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open("cpu_usage.log")
+            .open("config/cpu_usage.log")
             .unwrap();
         loop {
             let mut sys = sys_clone.lock().unwrap();
@@ -27,14 +27,25 @@ pub fn start_monitor() {
                 let cpu_usage = process.cpu_usage();
                 let now = Local::now();
                 let datetime_str = now.format("%d/%m/%Y %H:%M:%S").to_string();
-                writeln!(file, "{} - CPU usage: {:.2}%", datetime_str, cpu_usage);
+                writeln!(file, "{} - CPU usage: {:.2}%", datetime_str, cpu_usage).expect("Failed to store logs");
             }
             thread::sleep(Duration::from_secs(120)); // Attendi 2 minuti
         }
     });
 }
 
-pub fn perform_backup() -> Result<(), BackupperError> {
-    let backupper = Backupper::new();
-    backupper.perform_backup_with_stats()
+pub fn perform_backup(mutex_controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {
+    let mut lk = mutex_controller.lock().unwrap();
+    if !*lk {
+        *lk = true;
+        let backupper = Backupper::new();
+        backupper.perform_backup_with_stats()
+    } else {
+        Ok(())
+    }
+}
+
+pub fn abort_backup(mutex_controller: Arc<Mutex<bool>>) {
+    let mut lk = mutex_controller.lock().unwrap();
+    *lk = true;
 }

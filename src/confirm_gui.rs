@@ -27,11 +27,12 @@ impl eframe::App for ConfirmGui {
                 ui.horizontal(|ui| {
                     ui.centered_and_justified(|ui| {
                         if ui.button("Yes").clicked() {
+                            _frame.close();
                             self.choice.send(Choice::Yes).expect("TODO: panic message");
-
                         }
                         ui.add_space(4.0);
                         if ui.button("No").clicked() {
+                            _frame.close();
                             self.choice.send(Choice::No).expect("TODO: panic message");
                         }
                     });

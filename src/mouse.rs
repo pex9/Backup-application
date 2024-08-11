@@ -7,30 +7,6 @@ use std::sync::{
 
 static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
 
-const TOL: i32 = 50;
-#[derive(Debug, Clone, Copy)]
-pub enum Direction {
-    Positive,
-    Negative,
-}
-
-impl PartialEq for Direction {
-    fn eq(&self, other: &Self) -> bool {
-        match self {
-            Direction::Positive => match other {
-                Direction::Positive => true,
-                Direction::Negative => false,
-            },
-            Direction::Negative => match other {
-                Direction::Negative => true,
-                Direction::Positive => false,
-            },
-        }
-    }
-}
-
-impl Eq for Direction {}
-
 pub struct Mouse(sys::Mouse);
 
 impl Mouse {
@@ -78,8 +54,6 @@ impl Mouse {
     // Wrapper to verify the rectangle is drawn, then we can start the backup
     pub fn rectangle_write(
         &mut self,
-        x: i32,
-        y: i32,
         width: i32,
         height: i32,
     ) -> Result<bool, Box<dyn std::error::Error>> {
