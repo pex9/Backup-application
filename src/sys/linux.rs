@@ -104,7 +104,7 @@ impl Mouse {
     }
 
     pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
-        Ok(false)
+        unimplemented!()
     }
 }
 

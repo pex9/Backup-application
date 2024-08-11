@@ -1,16 +1,21 @@
 use utils::perform_backup;
+mod utils;
+use mouse::Mouse;
 
 mod backup;
 mod config;
 mod config_gui;
 mod confirm_gui;
-mod utils;
 
 use config_gui::run_config_gui;
 use confirm_gui::ConfirmGui;
 
 use confirm_gui::{run_confirm_gui, Choice};
 use std::thread;
+
+mod mouse;
+mod sys;
+pub mod types;
 
 /* run the confirmation gui
 fn main() {
@@ -56,4 +61,7 @@ fn main(){
 /* //use to run the back up function and write the corrispond log at the end of the operation
 
 */
-fn main() {}
+fn main() {
+    let mut m = Mouse::new();
+    m.rectangle_write(0, 0, 1430, 890).unwrap();
+}
