@@ -93,14 +93,15 @@ impl Mouse {
         Ok(res)
     }
 
-    pub fn confirm(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn confirm(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
-        match conf.confirm() {
+        let res = conf.confirm();
+        match res {
             true => println!("Confirmed"), // In final version, we will confirm the backup here gui to insert and activate backup
             false => println!("We weren't confirming"), // In final version, we will cancel the backup here
         }
-        Ok(())
+        Ok(res)
     }
 
     fn on_three_clicks(&self) {

@@ -7,7 +7,6 @@ use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
-use auto_launch::AutoLaunchBuilder;
 
 pub fn start_monitor() {
     // Avvia il thread di monitoraggio CPU ( dovra essere una funzione)
@@ -38,24 +37,4 @@ pub fn start_monitor() {
 pub fn perform_backup() -> Result<(), BackupperError> {
     let backupper = Backupper::new();
     backupper.perform_backup_with_stats()
-}
-
-pub fn auto_launch_app(app_path: &str) {
-    let app_name = "the-app";
-    let args = &["--minimized"];
-    let auto = AutoLaunchBuilder::new()
-        .set_app_name(app_name)
-        .set_app_path(app_path)
-        .set_use_launch_agent(false)
-        .set_args(args)
-        .build()
-        .unwrap();
-
-    // enable the auto launch
-    auto.enable().is_ok();
-    println!("enabled: {}", auto.is_enabled().unwrap());
-
-    // disable the auto launch
-    auto.disable().is_ok();
-    println!("enabled: {}", auto.is_enabled().unwrap());
 }

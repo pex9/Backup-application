@@ -7,7 +7,19 @@ use image::imageops::FilterType;
 
 use crate::config::BackupConfig;
 
-impl eframe::App for BackupConfig {
+#[derive(Debug)]
+pub struct BackupConfigGUI {
+    config: BackupConfig,
+}
+
+impl BackupConfigGUI {
+    pub fn new() -> Self {
+        let config = BackupConfig::new();
+        Self { config }
+    }
+}
+
+impl eframe::App for BackupConfigGUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
@@ -22,24 +34,24 @@ impl eframe::App for BackupConfig {
                 ui.add_space(3.0);
                 ui.heading("Backup application");
 
-                ui.label(format!("Selected Source folder: {}", self.source));
+                ui.label(format!("Selected Source folder: {}", self.config.source));
                 ui.add_space(3.0);
                 if ui.button("Source Folder").clicked() {
                     if let Some(folder) = FileDialog::new().pick_folder() {
-                        self.source = folder.display().to_string();
+                        self.config.source = folder.display().to_string();
                     }
                 }
                 ui.add_space(3.0);
-                ui.label(format!("Selected Destination folder: {}", self.destination));
+                ui.label(format!("Selected Destination folder: {}", self.config.destination));
                 ui.add_space(3.0);
                 if ui.button("Destination Folder").clicked() {
                     if let Some(folder) = FileDialog::new().pick_folder() {
-                        self.destination = folder.display().to_string();
+                        self.config.destination = folder.display().to_string();
                     }
                 }
                 ui.add_space(3.0);
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let extensions_str = self.excluded_extensions.join(";");
+                let extensions_str = self.config.excluded_extensions.join(";");
 
                 ui.label("Enter file extensions to exclude from backup (separated by ';'):");
                 let mut input_extensions = extensions_str.clone();
@@ -51,13 +63,13 @@ impl eframe::App for BackupConfig {
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_extensions != extensions_str {
-                    self.excluded_extensions = input_extensions.split(';')
+                    self.config.excluded_extensions = input_extensions.split(';')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
 
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let directories_str = self.excluded_directories.join(";");
+                let directories_str = self.config.excluded_directories.join(";");
 
                 ui.label("Enter directories to exclude from backup (separated by ';'):");
                 ui.add_space(3.0);
@@ -69,7 +81,7 @@ impl eframe::App for BackupConfig {
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_directories != directories_str {
-                    self.excluded_directories = input_directories.split(';')
+                    self.config.excluded_directories = input_directories.split(';')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
@@ -80,7 +92,7 @@ impl eframe::App for BackupConfig {
                             // Place the buttons side by side
                             if ui.button("Save options").clicked() {
                                 ui.add_space(5.0);
-                                match self.save_info() {
+                                match self.config.save_info() {
                                     Ok(_) => ui.label("Info saved successfully."),
                                     Err(e) => ui.label(format!("Failed to save info: {:?}", e)),
                                 };
@@ -134,7 +146,7 @@ pub fn run_config_gui() -> Result<(), Box<dyn Error>> {
     eframe::run_native(
         "Back-up app",
         options,
-        Box::new(|_| Box::new(BackupConfig::new())),
+        Box::new(|_| Box::new(BackupConfigGUI::new())),
     );
 
     Ok(())

@@ -1,8 +1,9 @@
-use std::sync::mpsc::{Sender};
+use std::sync::mpsc::Sender;
 use egui::Context;
 use eframe::NativeOptions;
 
-pub struct ConfirmGui {
+const APP_NAME: &str = "Emergency Backup";
+struct ConfirmGui {
     choice: Sender<Choice>
 }
 
@@ -41,8 +42,7 @@ impl eframe::App for ConfirmGui {
 }
 
 pub fn run_confirm_gui(sender: Sender<Choice>) {
-
-    let  options = NativeOptions {
+    let options = NativeOptions {
         initial_window_size: Some(egui::vec2(250.0, 140.0)),
         drag_and_drop_support: false,
         resizable: false,
@@ -50,7 +50,7 @@ pub fn run_confirm_gui(sender: Sender<Choice>) {
     };
 
     eframe::run_native(
-        "Back-up",
+        APP_NAME,
         options,
         Box::new(move |_cc| Box::new(ConfirmGui::new(sender))),
     )
