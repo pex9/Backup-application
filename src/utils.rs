@@ -7,7 +7,7 @@ use std::io::{Write};
 use std::path::Path;
 use chrono::{Local, Utc};
 
-use auto_launch::AutoLaunch;
+use auto_launch::AutoLaunchBuilder;
 use crate::config_gui::MyApp;
 
 
@@ -67,48 +67,22 @@ pub fn perform_backup(back_up: MyApp) -> io::Result<()> {
 }
 
 
-pub fn auto_launch_windows() {
+pub fn auto_launch_app(app_path: &str) {
     let app_name = "the-app";
-    let app_path = "C:\\path\\to\\the-app.exe";
     let args = &["--minimized"];
-    let auto = AutoLaunch::new(app_name, app_path, args);
+    let auto = AutoLaunchBuilder::new()
+        .set_app_name(app_name)
+        .set_app_path(app_path)
+        .set_use_launch_agent(false)
+        .set_args(args)
+        .build()
+        .unwrap();
 
     // enable the auto launch
     auto.enable().is_ok();
-    auto.is_enabled().unwrap();
-
-    // disable the auto launch
-    //auto.disable().is_ok();
-    //auto.is_enabled().unwrap();
-}
-
-pub fn auto_launch_mac_os() {
-    let app_name = "the-app";
-    let app_path = "/path/to/the-app.app";
-    let args = &["--minimized"];
-    let auto = AutoLaunch::new(app_name, app_path, args);
-
-    // enable the auto launch
-    auto.enable().is_ok();
-    auto.is_enabled().unwrap();
+    println!("enabled: {}", auto.is_enabled().unwrap());
 
     // disable the auto launch
     auto.disable().is_ok();
-    auto.is_enabled().unwrap();
-}
-
-pub fn auto_launch_linux()
-{
-    let app_name = "the-app";
-    let app_path = "/path/to/the-app";
-    let args = &["--minimized"];
-    let auto = AutoLaunch::new(app_name, app_path,args);
-
-    // enable the auto launch
-    auto.enable().is_ok();
-    auto.is_enabled().unwrap();
-
-    // disable the auto launch
-    auto.disable().is_ok();
-    auto.is_enabled().unwrap();
+    println!("enabled: {}", auto.is_enabled().unwrap());
 }

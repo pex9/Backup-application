@@ -836,7 +836,6 @@ dependencies = [
  "time",
  "winapi",
  "winit 0.28.7",
- "winreg",
  "x11",
 ]
 

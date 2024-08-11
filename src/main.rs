@@ -1,6 +1,5 @@
 mod config_gui; // Declare the module
 mod utils;
-use utils::auto_launch_windows;
 
 use std::error::Error;
 
@@ -9,6 +8,7 @@ use config_gui::MyApp;
 
 use confirm_gui::ConfirmGui;
 use config_gui::run_config_gui;
+use emergency_backup::utils::auto_launch_app;
 
 
 use std::thread;
@@ -52,7 +52,7 @@ fn main(){
 // use this if want to activate the program when load pc (windows tested, need to check also linux,macos)
 /*fn main()
 {
-    auto_launch_windows();
+    auto_launch_app("/path/to/app");
 }
 */
 /* //use to run the back up function and write the corrispond log at the end of the operation
