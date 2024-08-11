@@ -1,7 +1,12 @@
 #![allow(dead_code)]
+
+
 use crate::types::{keys::Keys, Point};
 use libloading::Library;
 use winapi::shared::windef::POINT;
+use winapi::um::winuser::{GetAsyncKeyState, VK_LBUTTON};
+
+
 
 const MOUSEEVENTF_ABSOLUTE: i32 = 0x8000;
 const MOUSEEVENTF_MOVE: i32 = 0x1;
@@ -119,6 +124,10 @@ impl Mouse {
             get_cursor_pos(&mut pos);
             Ok(pos.into())
         }
+    }
+
+    pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
+        Ok(unsafe { GetAsyncKeyState(VK_LBUTTON) } != 0)
     }
 
     pub fn wheel(&self, delta: i32) -> Result<(), Box<dyn std::error::Error>> {

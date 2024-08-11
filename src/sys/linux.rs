@@ -5,7 +5,7 @@ use std::error::Error;
 use libc;
 
 use libc::{c_int, c_void, c_char};
-use std::{ptr};
+use std::ptr;
 
 type XDO = *const c_void;
 type WINDOW = c_int;
@@ -101,6 +101,10 @@ impl Mouse {
             }
         }
         Ok(())
+    }
+
+    pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
+        unimplemented!()
     }
 }
 
