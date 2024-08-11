@@ -15,11 +15,11 @@ pub struct Backupper {
 
     added_size: Mutex<u64>,
     removed_size: Mutex<u64>,
-    dim_overflow: Mutex<bool>,
 }
 
 #[derive(Debug)]
 pub enum BackupperError {
+    BkpError(String),
     WalkerError(WalkerErr),
     IoError(Vec<std::io::Error>),
 }
@@ -31,7 +31,6 @@ impl Backupper {
             walker_config: WalkerConfig::new(Vec::new()),
             added_size: Mutex::new(0),
             removed_size: Mutex::new(0),
-            dim_overflow: Mutex::new(false),
         };
         bkp.update_rules();
         bkp
@@ -95,30 +94,10 @@ impl Backupper {
     fn copy_file(&self, src: &path::PathBuf, dst: &path::PathBuf) -> Result<(), std::io::Error> {
         Self::create_parent_if_not_exists(dst)?;
         if dst.exists() {
-            let dst_meta = std::fs::metadata(&dst)?;
-            let dst_size = dst_meta.len();
-            if self
-                .removed_size
-                .lock()
-                .unwrap()
-                .checked_add(dst_size)
-                .is_none()
-            {
-                eprintln!("Dimensions overflow");
-                *self.dim_overflow.lock().unwrap() = true;
-            }
+            *self.removed_size.lock().unwrap() += std::fs::metadata(dst)?.len();
         }
         std::fs::copy(src, dst)?;
-        if self
-            .added_size
-            .lock()
-            .unwrap()
-            .checked_add(std::fs::metadata(src)?.len())
-            .is_none()
-        {
-            eprintln!("Dimensions overflow");
-            *self.dim_overflow.lock().unwrap() = true;
-        }
+        *self.added_size.lock().unwrap() += std::fs::metadata(src)?.len();
         println!("File copied from {} to {}", src.display(), dst.display());
         Ok(())
     }
@@ -154,7 +133,21 @@ impl Backupper {
     pub fn perform_backup(&self) -> Result<(), BackupperError> {
         *self.added_size.lock().unwrap() = 0;
         *self.removed_size.lock().unwrap() = 0;
-        *self.dim_overflow.lock().unwrap() = false;
+
+        let src = self.backup_config.source.clone();
+        let dst = self.backup_config.destination.clone();
+
+        if src.is_empty() || dst.is_empty() {
+            return Err(BackupperError::BkpError(
+                "Source or destination path is not set".to_string(),
+            ));
+        }
+
+        if !path::Path::new(&src).is_dir() {
+            return Err(BackupperError::BkpError(
+                "Source is not a valid directory".to_string(),
+            ));
+        }
 
         let mut errors = Vec::new();
 
@@ -198,7 +191,6 @@ impl Backupper {
     ) -> Result<(), std::io::Error> {
         let added = *self.added_size.lock().unwrap();
         let removed = *self.removed_size.lock().unwrap();
-        let total_size = added - removed;
         let duration = start_clock_time.elapsed();
         let cpu_duration = start_cpu_time.elapsed();
 
@@ -208,11 +200,21 @@ impl Backupper {
             chrono::Utc::now(),
             duration
         )?;
-        writeln!(
-            log_file,
-            "Total size of files: {} bytes ({} added, {} removed)",
-            total_size, added, removed
-        )?;
+        if added > removed {
+            let total_size = added - removed;
+            writeln!(
+                log_file,
+                "Total size of files: {} bytes ({} added, {} removed)",
+                total_size, added, removed
+            )?;
+        } else {
+            let total_size = removed - added;
+            writeln!(
+                log_file,
+                "Total size of files: -{} bytes ({} removed, {} added)",
+                total_size, removed, added
+            )?;
+        }
         writeln!(log_file, "CPU time used: {:.2?}", cpu_duration)?;
 
         Ok(())
