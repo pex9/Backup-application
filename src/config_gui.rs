@@ -1,67 +1,13 @@
 use eframe::egui;
 use eframe::egui::{ColorImage, TextureHandle};
-use serde::{Serialize, Deserialize};
 use std::error::Error;
-use std::fs::File;
-use std::io::{BufReader};
-use std::path::Path;
 use rfd::FileDialog;
-use image::{imageops};
+use image::imageops;
 use image::imageops::FilterType;
-use serde_json;
 
-#[derive(Serialize, Deserialize, Default)]
-pub struct MyApp {
-    pub source: String,
-    pub destination: String,
-    pub selected_extensions: Vec<String>,
-    pub excluded_directories: Vec<String>,
-}
+use crate::config::BackupConfig;
 
-impl MyApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let mut app = Self {
-            source: "".to_string(),
-            destination: "".to_string(),
-            selected_extensions: Vec::new(),
-            excluded_directories: Vec::new(),
-        };
-
-        // Load previously saved information
-        app.load_info();
-        app
-    }
-
-    fn save_info(&self) -> Result<(), Box<dyn Error>> {
-        let path = "config/backup_info.json";
-        let file = File::create(path)?;
-        serde_json::to_writer(file, self)?;
-        Ok(())
-    }
-
-    fn load_info(&mut self) {
-        let path = "config/backup_info.json";
-        if Path::new(path).exists() {
-            let file = File::open(path).expect("Unable to open file");
-            let reader = BufReader::new(file);
-            match serde_json::from_reader(reader) {
-                Ok(loaded_info) => *self = loaded_info,
-                Err(e) => {
-                    eprintln!("Error loading JSON: {:?}", e);
-                    // Handle JSON parsing errors by initializing with default values
-                    self.selected_extensions = Vec::new();
-                    self.excluded_directories = Vec::new();
-                }
-            }
-        } else {
-            // File does not exist; initialize with default values
-            self.selected_extensions = Vec::new();
-            self.excluded_directories = Vec::new();
-        }
-    }
-}
-
-impl eframe::App for MyApp {
+impl eframe::App for BackupConfig {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
@@ -93,9 +39,9 @@ impl eframe::App for MyApp {
                 }
                 ui.add_space(3.0);
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let extensions_str = self.selected_extensions.join(";");
+                let extensions_str = self.excluded_extensions.join(";");
 
-                ui.label("Enter file extensions to backup (separated by ';'):");
+                ui.label("Enter file extensions to exclude from backup (separated by ';'):");
                 let mut input_extensions = extensions_str.clone();
                 ui.add_space(3.0);
                 ui.add(egui::TextEdit::multiline(&mut input_extensions)
@@ -105,7 +51,7 @@ impl eframe::App for MyApp {
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_extensions != extensions_str {
-                    self.selected_extensions = input_extensions.split(';')
+                    self.excluded_extensions = input_extensions.split(';')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
@@ -188,7 +134,7 @@ pub fn run_config_gui() -> Result<(), Box<dyn Error>> {
     eframe::run_native(
         "Back-up app",
         options,
-        Box::new(|cc| Box::new(MyApp::new(cc))),
+        Box::new(|_| Box::new(BackupConfig::new())),
     );
 
     Ok(())
