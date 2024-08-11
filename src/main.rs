@@ -1,16 +1,10 @@
+use utils::perform_backup;
+
 mod backup;
+mod config;
 mod config_gui;
 mod confirm_gui;
 mod utils;
-
-use std::error::Error;
-
-use config_gui::MyApp;
-
-use config_gui::run_config_gui;
-
-use confirm_gui::{run_confirm_gui, Choice};
-use std::thread;
 
 /* run the confirmation gui
 fn main() {
@@ -57,5 +51,5 @@ fn main(){
 
 */
 fn main() {
-    let backupper = backup::Backupper::new();
+    perform_backup().unwrap();
 }
