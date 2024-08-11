@@ -29,7 +29,7 @@ fn main() {
     } else {
         main_background();
     }
-}
+}*/
 
 fn main_background() {
     utils::start_monitor();
