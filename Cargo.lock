@@ -815,6 +815,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "emergency_backup"
+version = "0.1.0"
+dependencies = [
+ "auto-launch",
+ "chrono",
+ "core-graphics 0.22.3",
+ "eframe",
+ "egui",
+ "egui_extras",
+ "env_logger",
+ "image",
+ "libc",
+ "libloading 0.6.7",
+ "log",
+ "rfd",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "time",
+ "winapi",
+ "winit 0.28.7",
+ "winreg",
+ "x11",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1580,32 +1606,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "mouse_track"
-version = "0.1.0"
-dependencies = [
- "auto-launch",
- "chrono",
- "core-graphics 0.22.3",
- "eframe",
- "egui",
- "egui_extras",
- "env_logger",
- "image",
- "libc",
- "libloading 0.6.7",
- "log",
- "rfd",
- "serde",
- "serde_json",
- "sysinfo",
- "time",
- "winapi",
- "winit 0.28.7",
- "winreg",
- "x11",
 ]
 
 [[package]]
