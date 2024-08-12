@@ -85,37 +85,37 @@ impl eframe::App for BackupConfigGUI {
 
                 ui.add_space(3.0);
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let extensions_str = self.config.excluded_extensions.join(";");
+                let extensions_str = self.config.excluded_extensions.join("\n");
 
-                ui.label("Enter file extensions to exclude from backup (separated by ';'):");
+                ui.label("Enter file extensions to exclude from backup (on different lines):");
                 let mut input_extensions = extensions_str.clone();
                 ui.add_space(3.0);
                 ui.add(egui::TextEdit::multiline(&mut input_extensions)
-                    .hint_text("Enter extensions separated by ';'")
+                    .hint_text("Enter extensions on different lines")
                     .desired_rows(5)
                 );
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_extensions != extensions_str {
-                    self.config.excluded_extensions = input_extensions.split(';')
+                    self.config.excluded_extensions = input_extensions.split('\n')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
 
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
-                let directories_str = self.config.excluded_directories.join(";");
+                let directories_str = self.config.excluded_directories.join("\n");
 
-                ui.label("Enter directories to exclude from backup (separated by ';'):");
+                ui.label("Enter directories to exclude from backup (on different lines):");
                 ui.add_space(3.0);
                 let mut input_directories = directories_str.clone();
                 ui.add(egui::TextEdit::multiline(&mut input_directories)
-                    .hint_text("Enter directories separated by ';'")
+                    .hint_text("Enter directories on different lines")
                     .desired_rows(5)
                 );
 
                 // Convert the input string back to Vec<String> when the user modifies the text area
                 if input_directories != directories_str {
-                    self.config.excluded_directories = input_directories.split(';')
+                    self.config.excluded_directories = input_directories.split('\n')
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
