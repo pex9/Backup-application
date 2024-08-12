@@ -39,7 +39,6 @@ fn main_background() {
     loop {
         let pos = mouse.get_position().unwrap();
         if pos.x == 0 && pos.y == 0 {
-            //fix this
             if mouse.rectangle_write(width as i32-1, height as i32-1).unwrap() {
                 gesture_identified();
             }
