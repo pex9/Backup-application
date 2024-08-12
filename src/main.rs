@@ -21,9 +21,6 @@ mod sys;
 pub mod types;
 
 fn main() {
-    if !launcher::is_enabled() {
-        launcher::enable();
-    }
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 && args[1] == "--config" {
         main_configuration();
@@ -33,7 +30,7 @@ fn main() {
     } else {
         main_background();
     }
-}*/
+}
 
 fn main_background() {
     utils::start_monitor();
