@@ -4,25 +4,39 @@ use std::error::Error;
 use rfd::FileDialog;
 use image::imageops;
 use image::imageops::FilterType;
-
 use crate::config::BackupConfig;
+use std::time::{Instant, Duration};
 
 #[derive(Debug)]
 pub struct BackupConfigGUI {
     config: BackupConfig,
+    save_message: Option<(String, Instant)>, // use to diplay the message when save and also the time
 }
 
 impl BackupConfigGUI {
     pub fn new() -> Self {
         let config = BackupConfig::new();
-        Self { config }
+        Self { config, save_message: None }
+    }
+
+    fn set_save_message(&mut self, message: String) {
+        self.save_message = Some((message, Instant::now()));
     }
 }
 
 impl eframe::App for BackupConfigGUI {
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let time_to_wait:u64 = 3;
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
+
+                // Display the success message if it is within the desired time window
+                if let Some((message, timestamp)) = &self.save_message {
+                    if timestamp.elapsed() < Duration::from_secs(time_to_wait) {
+                        ui.heading(message);
+                    }
+                }
                 // Load image texture
                 let image_path = "assets/backup-file.png";
                 let texture_handle = load_image_texture(ctx, image_path, (60, 60));
@@ -85,25 +99,26 @@ impl eframe::App for BackupConfigGUI {
                         .map(|s| s.trim().to_string())
                         .collect();
                 }
+
+
+
                 ui.horizontal(|ui| {
-                        ui.vertical_centered(|ui| {
-                            ui.add_space(10.0);
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(10.0);
 
-                            // Place the buttons side by side
-                            if ui.button("Save options").clicked() {
-                                ui.add_space(5.0);
-                                match self.config.save_info() {
-                                    Ok(_) => ui.label("Info saved successfully."),
-                                    Err(e) => ui.label(format!("Failed to save info: {:?}", e)),
-                                };
-                            }
-                            ui.add_space(3.0);
-                            if ui.button("Close Window").clicked() {
-                                _frame.close(); // Request to close the window
-                            }
-                        });
-
-
+                        // Place the buttons side by side
+                        if ui.button("Save options").clicked() {
+                            ui.add_space(5.0);
+                            match self.config.save_info() {
+                                Ok(_) => self.set_save_message("Info saved successfully".to_string()),
+                                Err(e) => self.set_save_message(format!("Failed to save info: {:?}", e)),
+                            };
+                        }
+                        ui.add_space(3.0);
+                        if ui.button("Close Window").clicked() {
+                            _frame.close(); // Request to close the window
+                        }
+                    });
                 });
             });
         });
