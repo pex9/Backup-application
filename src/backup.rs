@@ -24,6 +24,18 @@ pub enum BackupperError {
     IoError(Vec<std::io::Error>),
 }
 
+impl From<WalkerErr> for BackupperError {
+    fn from(e: WalkerErr) -> Self {
+        BackupperError::WalkerError(e)
+    }
+}
+
+impl From<std::io::Error> for BackupperError {
+    fn from(e: std::io::Error) -> Self {
+        BackupperError::IoError(vec![e])
+    }
+}
+
 impl Backupper {
     pub fn new() -> Self {
         let mut bkp = Self {
@@ -69,11 +81,23 @@ impl Backupper {
             });
         }
         self.walker_config = WalkerConfig::new(rules);
+        self.walker_config.drop_empty_dirs = true;
     }
 
-    fn get_target_files(&self) -> Result<Vec<path::PathBuf>, WalkerErr> {
+    fn get_target_files(&self) -> Result<Vec<path::PathBuf>, BackupperError> {
         let path = path::PathBuf::from(self.backup_config.source.clone());
-        walker::walk(&path, &self.walker_config)
+        let mut data = walker::walk(&path, &self.walker_config)?;
+        #[cfg(target_os = "windows")]
+        {
+            data = data.into_iter()
+                .map(|x| {
+                    x.strip_prefix(format!("\\\\?\\{}", self.backup_config.source).as_str())
+                        .unwrap_or(&x)
+                        .to_path_buf()
+                })
+                .collect();
+        }
+        Ok(data)
     }
 
     fn create_dst_path(&self, src: &path::PathBuf) -> path::PathBuf {
@@ -151,26 +175,25 @@ impl Backupper {
 
         let mut errors = Vec::new();
 
-        match self.get_target_files() {
-            Ok(files) => {
-                for file in files {
-                    let dst = self.create_dst_path(&file);
-                    match self.copy_file_if_diffs(&file, &dst) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            eprintln!("Error copying file {:?}: {}", file, e);
-                            errors.push(e);
-                        }
-                    }
-                }
-                if errors.len() > 0 {
-                    return Err(BackupperError::IoError(errors));
+        let files = self.get_target_files()?;
+
+        for file in files {
+            let mut file = file;
+            #[cfg(target_os = "windows")]
+            {
+                file = path::PathBuf::from(format!("{}{}{}", src, path::MAIN_SEPARATOR, file.display()));
+            }
+            let dst = self.create_dst_path(&file);
+            match self.copy_file_if_diffs(&file, &dst) {
+                Ok(_) => {}
+                Err(e) => {
+                    eprintln!("Error copying file {:?}: {}", file, e);
+                    errors.push(e);
                 }
             }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                return Err(BackupperError::WalkerError(e));
-            }
+        }
+        if errors.len() > 0 {
+            return Err(BackupperError::IoError(errors));
         }
 
         Ok(())
@@ -200,7 +223,7 @@ impl Backupper {
             chrono::Utc::now(),
             duration
         )?;
-        if added > removed {
+        if added >= removed {
             let total_size = added - removed;
             writeln!(
                 log_file,
