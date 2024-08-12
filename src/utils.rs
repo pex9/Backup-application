@@ -1,7 +1,7 @@
 use chrono::Local;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 use sysinfo::{Pid, System};
@@ -36,10 +36,19 @@ pub fn start_monitor() {
     });
 }
 
-pub fn perform_backup(mutex_controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {
-    let mut lk = mutex_controller.lock().unwrap();
+pub fn perform_backup(controller: Arc<(Mutex<bool>, Condvar)>) -> Result<(), BackupperError> {
+    let (lock, cvar) = &*controller;
+
+    let mut lk = lock.lock().unwrap();
+
+
+    while *lk {
+        lk = cvar.wait(lk).unwrap();
+    }
     if !*lk {
         *lk = true;
+
+        cvar.notify_all(); // Notify other thread es gui to stop
         let backupper = Backupper::new();
         backupper.perform_backup_with_stats()
     } else {
@@ -47,8 +56,12 @@ pub fn perform_backup(mutex_controller: Arc<Mutex<bool>>) -> Result<(), Backuppe
     }
 }
 
-pub fn abort_backup(mutex_controller: Arc<Mutex<bool>>) {
-    let mut lk = mutex_controller.lock().unwrap();
+pub fn abort_backup(controller: Arc<(Mutex<bool>, Condvar)>) {
+    let (lock, cvar) = &*controller;
+    let mut lk = lock.lock().unwrap();
+    while *lk {
+        lk = cvar.wait(lk).unwrap();
+    }
     *lk = true;
 }
 

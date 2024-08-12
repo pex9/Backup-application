@@ -7,8 +7,9 @@ mod confirm_gui;
 mod launcher;
 
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::{env, thread};
+use std::process::exit;
 
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
@@ -50,19 +51,36 @@ fn main_background() {
 
 fn gesture_identified() {
     let mut mouse = Mouse::new();
-    let controller = Arc::new(Mutex::new(false));
+    let controller = Arc::new((Mutex::new(false), Condvar::new()));
     let cont1 = Arc::clone(&controller);
+    let cont2 = Arc::clone(&controller);
+    let cont3 = Arc::clone(&controller);
     thread::spawn(move || {
+        let (lock, _cvar) = &*cont1;
         if mouse.confirm().unwrap() {
-            perform_backup(cont1).expect("Failed to perform backup");
+            let mut lk = lock.lock().unwrap();
+            println!("{}", *lk);
+            // If backup is already in progress, exit early
+
+            if *lk==true {
+                abort_backup(cont2);
+            }
+
+            if let Err(e) = perform_backup(cont3) {
+                println!("Failed to perform backup: {:?}", e);
+            }
         } else {
-            abort_backup(cont1);
+            abort_backup(cont2);
         }
     });
+
+    // Start GUI confirmation
     gui_confirmation(controller);
+
+    // Here you might need to wait for some signal or condition to keep the main thread running
 }
 
-fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
+fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
     let (sender, receiver) = std::sync::mpsc::channel();
 
     thread::spawn(move||{
@@ -70,11 +88,12 @@ fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
             Ok(choice) => {
                 match choice {
                     Choice::Yes => {
-                        perform_backup(mutex_controller).expect("Failed to perform backup");
+
+                        perform_backup(controller).expect("Failed to perform backup");
                     }
                     Choice::No => {
                         println!("Backup aborted 1");
-                        abort_backup(mutex_controller);
+                        abort_backup(controller);
                     }
                 }
                 #[cfg(target_os = "macos")]
@@ -84,7 +103,7 @@ fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
             }
             Err(e) => {
                 println!("Backup aborted 2: {:?}", e);
-                abort_backup(mutex_controller);
+                abort_backup(controller);
                 std::process::exit(0);
             }
         }

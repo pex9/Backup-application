@@ -142,7 +142,12 @@ impl eframe::App for BackupConfigGUI {
                 });
             });
         });
+        // Check if we should close the GUI
+        /*if self.should_close {
+            eframe.quit(); // Request the window to close
+        }*/
     }
+
 }
 
 fn load_image_texture(
