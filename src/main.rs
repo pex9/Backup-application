@@ -8,6 +8,8 @@ mod launcher;
 
 use std::sync::{Arc, Mutex};
 use std::{env, thread};
+use winit::event_loop;
+use winit::platform::windows::MonitorHandleExtWindows;
 
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
@@ -30,11 +32,15 @@ fn main() {
 fn main_background() {
     utils::start_monitor();
     let mut mouse = Mouse::new();
+    let primary_monitor = event_loop::EventLoop::new().primary_monitor().unwrap();
+    let monitor_size = primary_monitor.size();
+    let width = monitor_size.width;
+    let height = monitor_size.height;
     loop {
         let pos = mouse.get_position().unwrap();
         if pos.x == 0 && pos.y == 0 {
             //fix this
-            if mouse.rectangle_write(2550, 1070).unwrap() {
+            if mouse.rectangle_write(width as i32-1, height as i32-1).unwrap() {
                 gesture_identified();
             }
         } else {
