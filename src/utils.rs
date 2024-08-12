@@ -7,6 +7,8 @@ use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
+use std::process::Command;
+use std::env;
 
 pub fn start_monitor() {
     // Avvia il thread di monitoraggio CPU ( dovra essere una funzione)
@@ -48,4 +50,19 @@ pub fn perform_backup(mutex_controller: Arc<Mutex<bool>>) -> Result<(), Backuppe
 pub fn abort_backup(mutex_controller: Arc<Mutex<bool>>) {
     let mut lk = mutex_controller.lock().unwrap();
     *lk = true;
+}
+
+pub fn get_screensize() -> (u32, u32) {
+    let output = Command::new(env::current_exe().unwrap().as_os_str())
+        .arg("--screensize")
+        .output()
+        .expect("Failed to execute command");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let dimensions: Vec<&str> = stdout.trim().split('-').collect();
+
+    let width: u32 = dimensions[0].parse().unwrap_or(0);
+    let height: u32 = dimensions[1].parse().unwrap_or(0);
+
+    (width, height)
 }
