@@ -6,7 +6,7 @@ use image::imageops;
 use image::imageops::FilterType;
 use crate::config::BackupConfig;
 use std::time::{Instant, Duration};
-use crate::launcher;
+use crate::launcher::is_enabled;
 
 #[derive(Debug)]
 pub struct BackupConfigGUI {
@@ -16,7 +16,8 @@ pub struct BackupConfigGUI {
 
 impl BackupConfigGUI {
     pub fn new() -> Self {
-        let config = BackupConfig::new();
+        let mut config = BackupConfig::new();
+        config.autostart_enabled=is_enabled();
         Self { config, save_message: None }
     }
 

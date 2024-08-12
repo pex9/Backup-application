@@ -23,7 +23,7 @@ impl BackupConfig {
             excluded_extensions: Vec::new(),
             excluded_directories: Vec::new(),
             log_filename: "backup_log.txt".to_string(),
-            autostart_enabled: is_enabled()
+            autostart_enabled: false
         };
 
         // Load previously saved information
@@ -60,12 +60,14 @@ impl BackupConfig {
                     // Handle JSON parsing errors by initializing with default values
                     self.excluded_extensions = Vec::new();
                     self.excluded_directories = Vec::new();
+                    self.autostart_enabled=is_enabled();
                 }
             }
         } else {
             // File does not exist; initialize with default values
             self.excluded_extensions = Vec::new();
             self.excluded_directories = Vec::new();
+            self.autostart_enabled=is_enabled();
         }
     }
 }

@@ -7,7 +7,7 @@ mod confirm_gui;
 mod launcher;
 
 use std::sync::{Arc, Mutex};
-use std::{env, thread};
+use std::{thread};
 
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
@@ -19,7 +19,8 @@ mod sys;
 pub mod types;
 
 fn main() {
-    if !launcher::is_enabled() {
+    main_configuration();
+    /*if !launcher::is_enabled() {
         launcher::enable();
     }
     let args: Vec<String> = env::args().collect();
@@ -27,7 +28,7 @@ fn main() {
         main_configuration();
     } else {
         main_background();
-    }
+    }*/
 }
 
 fn main_background() {
