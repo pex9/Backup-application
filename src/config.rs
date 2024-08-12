@@ -1,6 +1,8 @@
 use std::{error::Error, fs::File, io::BufReader, path::Path};
 
 use serde::{Deserialize, Serialize};
+use crate::launcher;
+use crate::launcher::{disable, enable, is_enabled};
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct BackupConfig {
@@ -9,6 +11,8 @@ pub struct BackupConfig {
     pub excluded_extensions: Vec<String>,
     pub excluded_directories: Vec<String>,
     pub log_filename: String,
+    #[serde(skip)]
+    pub autostart_enabled: bool
 }
 
 impl BackupConfig {
@@ -19,6 +23,7 @@ impl BackupConfig {
             excluded_extensions: Vec::new(),
             excluded_directories: Vec::new(),
             log_filename: "backup_log.txt".to_string(),
+            autostart_enabled: is_enabled()
         };
 
         // Load previously saved information
@@ -30,6 +35,13 @@ impl BackupConfig {
         let path = "config/backup_info.json";
         let file = File::create(path)?;
         serde_json::to_writer(file, self)?;
+        if self.autostart_enabled==true && is_enabled()==false{
+            enable();
+        }
+        else if self.autostart_enabled==false && is_enabled()==true
+        {
+            disable();
+        }
         Ok(())
     }
 
@@ -39,7 +51,10 @@ impl BackupConfig {
             let file = File::open(path).expect("Unable to open file");
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
-                Ok(loaded_info) => *self = loaded_info,
+                Ok(loaded_info) => *self = {
+                    self.autostart_enabled=is_enabled();
+                    loaded_info
+                },
                 Err(e) => {
                     eprintln!("Error loading JSON: {:?}", e);
                     // Handle JSON parsing errors by initializing with default values

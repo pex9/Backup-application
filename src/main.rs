@@ -6,7 +6,6 @@ mod config_gui;
 mod confirm_gui;
 mod launcher;
 
-
 use std::sync::{Arc, Mutex};
 use std::{env, thread};
 
@@ -29,7 +28,7 @@ fn main() {
     } else {
         main_background();
     }
-}*/
+}
 
 fn main_background() {
     utils::start_monitor();
@@ -37,7 +36,8 @@ fn main_background() {
     loop {
         let pos = mouse.get_position().unwrap();
         if pos.x == 0 && pos.y == 0 {
-            if mouse.rectangle_write(1430, 890).unwrap() {
+            //fix this
+            if mouse.rectangle_write(2550, 1070).unwrap() {
                 gesture_identified();
             }
         } else {
@@ -63,7 +63,7 @@ fn gesture_identified() {
 fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
     let (sender, receiver) = std::sync::mpsc::channel();
 
-    thread::spawn(move||{
+    thread::spawn(move || {
         match receiver.recv() {
             Ok(choice) => {
                 match choice {
@@ -87,7 +87,6 @@ fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
     });
 
     run_confirm_gui(sender);
-
 }
 
 fn main_configuration() {

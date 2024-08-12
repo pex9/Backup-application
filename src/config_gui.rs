@@ -6,6 +6,7 @@ use image::imageops;
 use image::imageops::FilterType;
 use crate::config::BackupConfig;
 use std::time::{Instant, Duration};
+use crate::launcher;
 
 #[derive(Debug)]
 pub struct BackupConfigGUI {
@@ -31,12 +32,16 @@ impl eframe::App for BackupConfigGUI {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
 
+
                 // Display the success message if it is within the desired time window
                 if let Some((message, timestamp)) = &self.save_message {
                     if timestamp.elapsed() < Duration::from_secs(time_to_wait) {
                         ui.heading(message);
                     }
                 }
+
+
+
                 // Load image texture
                 let image_path = "assets/backup-file.png";
                 let texture_handle = load_image_texture(ctx, image_path, (60, 60));
@@ -47,6 +52,12 @@ impl eframe::App for BackupConfigGUI {
                 }
                 ui.add_space(3.0);
                 ui.heading("Backup application");
+
+                ui.add_space(5.0);
+                // Checkbox for enabling/disabling autostart
+                ui.checkbox(&mut self.config.autostart_enabled, "Enable Autostart");
+
+                ui.add_space(5.0);
 
                 ui.label(format!("Selected Source folder: {}", self.config.source));
                 ui.add_space(3.0);
@@ -63,6 +74,14 @@ impl eframe::App for BackupConfigGUI {
                         self.config.destination = folder.display().to_string();
                     }
                 }
+                ui.add_space(3.0);
+
+                //backup file log name
+                ui.label(format!("Insert the filename of the backup log (must be not empty): {}", self.config.log_filename));
+                ui.add_space(3.0);
+                ui.text_edit_singleline(&mut self.config.log_filename);
+
+
                 ui.add_space(3.0);
                 // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
                 let extensions_str = self.config.excluded_extensions.join(";");
@@ -148,7 +167,7 @@ pub fn run_config_gui() -> Result<(), Box<dyn Error>> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let options = eframe::NativeOptions {
-        initial_window_size: Some([640.0, 480.0].into()),
+        initial_window_size: Some([640.0, 560.0].into()),
         drag_and_drop_support: false,
         resizable: false,
         ..Default::default()
