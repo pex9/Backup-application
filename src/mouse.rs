@@ -1,9 +1,6 @@
 use crate::types::keys::Keys;
 use crate::{sys, types::Confirm, types::Point, types::Rectangle};
-use std::sync::{
-    atomic::{AtomicU32, Ordering},
-    Arc,
-};
+use std::sync::{atomic::{AtomicU32, Ordering}, Arc, Mutex, Condvar};
 
 static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
 
@@ -67,10 +64,11 @@ impl Mouse {
         Ok(res)
     }
 
-    pub fn confirm(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+    pub fn confirm(&mut self,controller: Arc<(Mutex<bool>, Condvar)>) -> Result<bool, Box<dyn std::error::Error>> {
+
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
-        let res = conf.confirm();
+        let res = conf.confirm(controller);
         match res {
             true => println!("Confirmed"), // In final version, we will confirm the backup here gui to insert and activate backup
             false => println!("We weren't confirming"), // In final version, we will cancel the backup here

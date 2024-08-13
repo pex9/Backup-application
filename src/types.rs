@@ -1,7 +1,9 @@
 use std::fmt;
-use std::sync::Arc;
+use std::process::exit;
+use std::sync::{Arc, Condvar, Mutex};
 
 use crate::mouse::Mouse;
+use crate::utils::abort_backup;
 
 pub mod keys;
 
@@ -140,11 +142,18 @@ impl<'a> Confirm<'a> {
     }
 
 
-    pub fn confirm(&mut self) -> bool {
+    pub fn confirm(&mut self,controller: Arc<(Mutex<bool>, Condvar)>) -> bool {
         let mut prec = self.mouse.get_position().unwrap();
         let mut history = Vec::<Direction>::new();
         let mut last: Option<Direction> = None;
         loop {
+            let mut lk = controller.0.lock().unwrap();
+            // If backup is already in progress, exit early
+
+            if *lk==true {
+                exit(0);
+            }
+            drop(lk);
             let pos = self.mouse.get_position().unwrap();
             // if pos.x-prec.x>=0 {
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
