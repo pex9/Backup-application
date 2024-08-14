@@ -1,6 +1,7 @@
 use crate::types::keys::Keys;
 use crate::{sys, types::Confirm, types::Point, types::Rectangle};
 use std::sync::{atomic::{AtomicU32, Ordering}, Arc, Mutex, Condvar};
+use crate::utils::play_sound;
 
 static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
 
@@ -58,8 +59,12 @@ impl Mouse {
         let mut rect = Rectangle::new(Arc::clone(&data), width, height);
         let res = rect.draw_rectangle();
         match res {
-            true => println!("Rectangle drawn"), // In final version, we will start the backup here
-            false => println!("We weren't drawing the rectangle"), // In final version, we will do nothing here
+            true => {
+                play_sound("assets/rectangle_drawn.mp3");
+            },
+            false => {
+                play_sound("assets/rectangle_not_drawn.mp3");
+            },
         }
         Ok(res)
     }
@@ -70,8 +75,12 @@ impl Mouse {
         let mut conf = Confirm::new(Arc::clone(&data));
         let res = conf.confirm(controller);
         match res {
-            true => println!("Confirmed"), // In final version, we will confirm the backup here gui to insert and activate backup
-            false => println!("We weren't confirming"), // In final version, we will cancel the backup here
+            true => {
+                play_sound("assets/backup_started.mp3");
+            },
+            false => {
+                play_sound("assets/backup_cancelled.mp3");
+            },
         }
         Ok(res)
     }

@@ -14,8 +14,12 @@ use std::process::exit;
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
 use mouse::Mouse;
-use utils::{abort_backup, get_screensize, perform_backup};
+use utils::{abort_backup, get_screensize, perform_backup, play_sound};
 use winit::event_loop;
+use std::fs::File;
+use std::io::BufReader;
+use rodio::Source;
+use crate::backup::BackupperError;
 
 mod mouse;
 mod sys;
@@ -40,9 +44,8 @@ fn main_background() {
     loop {
         let pos = mouse.get_position().unwrap();
         if pos.x == 0 && pos.y == 0 {
-            if mouse.rectangle_write((screensize.0 as i32)-1, (screensize.1 as i32)-1).unwrap() {
+            if mouse.rectangle_write((screensize.0 as i32) - 1, (screensize.1 as i32) - 1).unwrap() {
                 gesture_identified();
-
             }
         } else {
             thread::sleep(std::time::Duration::from_secs(1));
@@ -53,14 +56,19 @@ fn main_background() {
 fn gesture_identified() {
     let mut mouse = Mouse::new();
     let controller = Arc::new((Mutex::new(false), Condvar::new()));
-    println!("{:?}", controller.0);
     let cont1 = Arc::clone(&controller);
     let cont2 = Arc::clone(&controller);
     let cont3 = Arc::clone(&controller);
     thread::spawn(move || {
         if mouse.confirm(cont1).unwrap() {
-            if let Err(e) = perform_backup(cont2) {
-                println!("Failed to perform backup: {:?}", e);
+            match perform_backup(cont2) {
+                Ok(_) => {
+                    play_sound("assets/backup_finished.mp3");
+                }
+                Err(e) => {
+                    play_sound("assets/backup_aborted.mp3");
+                    println!("Failed to perform backup: {:?}", e);
+                }
             }
         } else {
             abort_backup(cont3);
@@ -75,20 +83,28 @@ fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
     let (sender, receiver) = std::sync::mpsc::channel();
     let controller2 = Arc::clone(&controller);
 
-    thread::spawn(move||{
+    thread::spawn(move || {
         match receiver.recv() {
             Ok(choice) => {
                 match choice {
                     Choice::Yes => {
-                        if let Err(e) = perform_backup(controller) {
-                            println!("Failed to perform backup: {:?}", e);
+                        play_sound("assets/backup_started.mp3");
+                        match perform_backup(controller) {
+                            Ok(_) => {
+                                play_sound("assets/backup_finished.mp3");
+                            }
+                            Err(e) => {
+                                play_sound("assets/backup_aborted.mp3");
+                                println!("Failed to perform backup: {:?}", e);
+                            }
                         }
                     }
                     Choice::No => {
                         println!("Backup aborted 1");
+                        play_sound("assets/backup_cancelled.mp3");
                         abort_backup(controller);
-                    },
-                    Choice::CloseGui =>{
+                    }
+                    Choice::CloseGui => {
                         println!("Close Gui Backup");
                         // no error code provided
                     }
@@ -99,7 +115,6 @@ fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
                 }
             }
             Err(e) => {
-
                 println!("Backup aborted 2: {:?}", e);
                 abort_backup(controller);
                 std::process::exit(0);
@@ -107,8 +122,7 @@ fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
         }
     });
 
-    run_confirm_gui(sender,controller2);
-
+    run_confirm_gui(sender, controller2);
 }
 
 fn main_configuration() {
@@ -116,7 +130,7 @@ fn main_configuration() {
 }
 
 fn main_get_screensize() -> (u32, u32) {
-    let event_loop= event_loop::EventLoop::new();
+    let event_loop = event_loop::EventLoop::new();
     let primary_monitor = event_loop.primary_monitor().unwrap();
     let physical_size = primary_monitor.size();
     let scale_factor = primary_monitor.scale_factor();
