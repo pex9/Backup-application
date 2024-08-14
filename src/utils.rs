@@ -1,13 +1,15 @@
 use chrono::Local;
-use std::fs::OpenOptions;
-use std::io::Write;
+use std::fs::{File, OpenOptions};
+use std::io::{BufReader, Write};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
-use auto_launch::AutoLaunchBuilder;
+use std::process::Command;
+use std::env;
+use rodio::{Decoder, OutputStream, Sink};
 
 pub fn start_monitor() {
     // Avvia il thread di monitoraggio CPU ( dovra essere una funzione)
@@ -19,7 +21,7 @@ pub fn start_monitor() {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open("cpu_usage.log")
+            .open("config/cpu_usage.log")
             .unwrap();
         loop {
             let mut sys = sys_clone.lock().unwrap();
@@ -28,34 +30,72 @@ pub fn start_monitor() {
                 let cpu_usage = process.cpu_usage();
                 let now = Local::now();
                 let datetime_str = now.format("%d/%m/%Y %H:%M:%S").to_string();
-                writeln!(file, "{} - CPU usage: {:.2}%", datetime_str, cpu_usage);
+                writeln!(file, "{} - CPU usage: {:.2}%", datetime_str, cpu_usage).expect("Failed to store logs");
             }
             thread::sleep(Duration::from_secs(120)); // Attendi 2 minuti
         }
     });
 }
 
-pub fn perform_backup() -> Result<(), BackupperError> {
-    let backupper = Backupper::new();
-    backupper.perform_backup_with_stats()
+pub fn perform_backup(controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {    
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
+
+        play_sound("assets/backup_started.mp3");
+
+        let backupper = Backupper::new();
+        let backup_result = backupper.perform_backup_with_stats();
+
+        match &backup_result {
+            Ok(_) => play_sound("assets/backup_finished.mp3"),
+            Err(e) => {
+                play_sound("assets/backup_aborted.mp3");
+                println!("Failed to perform backup: {:?}", e);
+            }
+        }
+
+        backup_result
+
+    } else {
+        Ok(())
+    }
 }
 
-pub fn auto_launch_app(app_path: &str) {
-    let app_name = "the-app";
-    let args = &["--minimized"];
-    let auto = AutoLaunchBuilder::new()
-        .set_app_name(app_name)
-        .set_app_path(app_path)
-        .set_use_launch_agent(false)
-        .set_args(args)
-        .build()
-        .unwrap();
+pub fn abort_backup(controller: Arc<Mutex<bool>>) {
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
+        play_sound("assets/backup_cancelled.mp3");
+    }
+}
 
-    // enable the auto launch
-    auto.enable().is_ok();
-    println!("enabled: {}", auto.is_enabled().unwrap());
+pub fn get_screensize() -> (u32, u32) {
+    let output = Command::new(env::current_exe().unwrap().as_os_str())
+        .arg("--screensize")
+        .output()
+        .expect("Failed to execute command");
 
-    // disable the auto launch
-    auto.disable().is_ok();
-    println!("enabled: {}", auto.is_enabled().unwrap());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let dimensions: Vec<&str> = stdout.trim().split('-').collect();
+
+    let width: u32 = dimensions[0].parse().unwrap_or(0);
+    let height: u32 = dimensions[1].parse().unwrap_or(0);
+
+    (width, height)
+}
+
+pub fn play_sound(path: &str) {
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+
+    // Load a sound from a file, using a path relative to Cargo.toml
+    let file = File::open(path).unwrap();
+    let source = Decoder::new(BufReader::new(file)).unwrap();
+
+    // Create a Sink to play the sound and wait until the audio is finished
+    let sink = Sink::try_new(&stream_handle).unwrap();
+    sink.append(source);
+
+    // Block the current thread until the sound has finished playing
+    sink.sleep_until_end();
 }

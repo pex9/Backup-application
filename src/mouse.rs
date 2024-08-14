@@ -1,35 +1,9 @@
 use crate::types::keys::Keys;
 use crate::{sys, types::Confirm, types::Point, types::Rectangle};
-use std::sync::{
-    atomic::{AtomicU32, Ordering},
-    Arc,
-};
+use std::sync::{atomic::{AtomicU32, Ordering}, Arc, Mutex};
+use crate::utils::play_sound;
 
 static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
-
-const TOL: i32 = 50;
-#[derive(Debug, Clone, Copy)]
-pub enum Direction {
-    Positive,
-    Negative,
-}
-
-impl PartialEq for Direction {
-    fn eq(&self, other: &Self) -> bool {
-        match self {
-            Direction::Positive => match other {
-                Direction::Positive => true,
-                Direction::Negative => false,
-            },
-            Direction::Negative => match other {
-                Direction::Negative => true,
-                Direction::Positive => false,
-            },
-        }
-    }
-}
-
-impl Eq for Direction {}
 
 pub struct Mouse(sys::Mouse);
 
@@ -78,8 +52,6 @@ impl Mouse {
     // Wrapper to verify the rectangle is drawn, then we can start the backup
     pub fn rectangle_write(
         &mut self,
-        x: i32,
-        y: i32,
         width: i32,
         height: i32,
     ) -> Result<bool, Box<dyn std::error::Error>> {
@@ -87,20 +59,21 @@ impl Mouse {
         let mut rect = Rectangle::new(Arc::clone(&data), width, height);
         let res = rect.draw_rectangle();
         match res {
-            true => println!("Rectangle drawn"), // In final version, we will start the backup here
-            false => println!("We weren't drawing the rectangle"), // In final version, we will do nothing here
+            true => {
+                play_sound("assets/rectangle_drawn.mp3");
+            },
+            false => {
+                play_sound("assets/rectangle_not_drawn.mp3");
+            },
         }
         Ok(res)
     }
 
-    pub fn confirm(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> Result<bool, Box<dyn std::error::Error>> {
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
-        match conf.confirm() {
-            true => println!("Confirmed"), // In final version, we will confirm the backup here gui to insert and activate backup
-            false => println!("We weren't confirming"), // In final version, we will cancel the backup here
-        }
-        Ok(())
+        let res = conf.confirm(controller);
+        Ok(res)
     }
 
     fn on_three_clicks(&self) {
