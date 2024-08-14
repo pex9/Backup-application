@@ -1,7 +1,7 @@
 use std::{error::Error, fs::File, io::BufReader, path::Path};
 
-use serde::{Deserialize, Serialize};
 use crate::launcher::{disable, enable, is_enabled};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct BackupConfig {
@@ -11,7 +11,7 @@ pub struct BackupConfig {
     pub excluded_directories: Vec<String>,
     pub log_filename: String,
     #[serde(skip)]
-    pub autostart_enabled: bool
+    pub autostart_enabled: bool,
 }
 
 impl BackupConfig {
@@ -22,7 +22,7 @@ impl BackupConfig {
             excluded_extensions: Vec::new(),
             excluded_directories: Vec::new(),
             log_filename: "backup_log.txt".to_string(),
-            autostart_enabled: false
+            autostart_enabled: false,
         };
 
         // Load previously saved information
@@ -34,11 +34,9 @@ impl BackupConfig {
         let path = "config/backup_info.json";
         let file = File::create(path)?;
         serde_json::to_writer(file, self)?;
-        if self.autostart_enabled==true && is_enabled()==false{
+        if self.autostart_enabled == true && is_enabled() == false {
             enable();
-        }
-        else if self.autostart_enabled==false && is_enabled()==true
-        {
+        } else if self.autostart_enabled == false && is_enabled() == true {
             disable();
         }
         Ok(())
@@ -50,23 +48,25 @@ impl BackupConfig {
             let file = File::open(path).expect("Unable to open file");
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
-                Ok(loaded_info) => *self = {
-                    self.autostart_enabled=is_enabled();
-                    loaded_info
-                },
+                Ok(loaded_info) => {
+                    *self = {
+                        self.autostart_enabled = is_enabled();
+                        loaded_info
+                    }
+                }
                 Err(e) => {
                     eprintln!("Error loading JSON: {:?}", e);
                     // Handle JSON parsing errors by initializing with default values
                     self.excluded_extensions = Vec::new();
                     self.excluded_directories = Vec::new();
-                    self.autostart_enabled=is_enabled();
+                    self.autostart_enabled = is_enabled();
                 }
             }
         } else {
             // File does not exist; initialize with default values
             self.excluded_extensions = Vec::new();
             self.excluded_directories = Vec::new();
-            self.autostart_enabled=is_enabled();
+            self.autostart_enabled = is_enabled();
         }
     }
 }

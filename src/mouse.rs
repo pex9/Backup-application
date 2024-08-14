@@ -70,7 +70,6 @@ impl Mouse {
     }
 
     pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> Result<bool, Box<dyn std::error::Error>> {
-
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
         let res = conf.confirm(controller);
