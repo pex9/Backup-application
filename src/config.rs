@@ -1,7 +1,6 @@
 use std::{error::Error, fs::File, io::BufReader, path::Path};
 
 use serde::{Deserialize, Serialize};
-use crate::launcher;
 use crate::launcher::{disable, enable, is_enabled};
 
 #[derive(Serialize, Deserialize, Default, Debug)]

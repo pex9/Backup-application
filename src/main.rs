@@ -7,19 +7,14 @@ mod confirm_gui;
 mod launcher;
 
 
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Mutex};
 use std::{env, thread};
-use std::process::exit;
 
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
 use mouse::Mouse;
-use utils::{abort_backup, get_screensize, perform_backup, play_sound};
+use utils::{abort_backup, get_screensize, perform_backup};
 use winit::event_loop;
-use std::fs::File;
-use std::io::BufReader;
-use rodio::Source;
-use crate::backup::BackupperError;
 
 mod mouse;
 mod sys;
@@ -55,23 +50,16 @@ fn main_background() {
 
 fn gesture_identified() {
     let mut mouse = Mouse::new();
-    let controller = Arc::new((Mutex::new(false), Condvar::new()));
-    let cont1 = Arc::clone(&controller);
-    let cont2 = Arc::clone(&controller);
-    let cont3 = Arc::clone(&controller);
+    let controller = Arc::new(Mutex::new(false));
+    let cont_gesture = Arc::clone(&controller);
     thread::spawn(move || {
-        if mouse.confirm(cont1).unwrap() {
-            match perform_backup(cont2) {
-                Ok(_) => {
-                    play_sound("assets/backup_finished.mp3");
-                }
-                Err(e) => {
-                    play_sound("assets/backup_aborted.mp3");
-                    println!("Failed to perform backup: {:?}", e);
-                }
-            }
+        let controller = Arc::clone(&cont_gesture);
+        if mouse.confirm(cont_gesture).unwrap() {
+            println!("Backup started from gesture");
+            perform_backup(controller).expect("Failed to perform backup");
         } else {
-            abort_backup(cont3);
+            println!("Backup aborted from gesture");
+            abort_backup(controller);
         }
     });
 
@@ -79,7 +67,7 @@ fn gesture_identified() {
     gui_confirmation(controller);
 }
 
-fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
+fn gui_confirmation(controller: Arc<Mutex<bool>>) {
     let (sender, receiver) = std::sync::mpsc::channel();
     let controller2 = Arc::clone(&controller);
 
@@ -88,20 +76,11 @@ fn gui_confirmation(controller: Arc<(Mutex<bool>, Condvar)>) {
             Ok(choice) => {
                 match choice {
                     Choice::Yes => {
-                        play_sound("assets/backup_started.mp3");
-                        match perform_backup(controller) {
-                            Ok(_) => {
-                                play_sound("assets/backup_finished.mp3");
-                            }
-                            Err(e) => {
-                                play_sound("assets/backup_aborted.mp3");
-                                println!("Failed to perform backup: {:?}", e);
-                            }
-                        }
+                        println!("Backup started from GUI");
+                        perform_backup(controller).expect("Failed to perform backup");
                     }
                     Choice::No => {
-                        println!("Backup aborted 1");
-                        play_sound("assets/backup_cancelled.mp3");
+                        println!("Backup aborted from GUI");
                         abort_backup(controller);
                     }
                     Choice::CloseGui => {

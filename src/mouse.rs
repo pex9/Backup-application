@@ -1,6 +1,6 @@
 use crate::types::keys::Keys;
 use crate::{sys, types::Confirm, types::Point, types::Rectangle};
-use std::sync::{atomic::{AtomicU32, Ordering}, Arc, Mutex, Condvar};
+use std::sync::{atomic::{AtomicU32, Ordering}, Arc, Mutex};
 use crate::utils::play_sound;
 
 static CLICK_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -69,19 +69,11 @@ impl Mouse {
         Ok(res)
     }
 
-    pub fn confirm(&mut self,controller: Arc<(Mutex<bool>, Condvar)>) -> Result<bool, Box<dyn std::error::Error>> {
+    pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> Result<bool, Box<dyn std::error::Error>> {
 
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
         let res = conf.confirm(controller);
-        match res {
-            true => {
-                play_sound("assets/backup_started.mp3");
-            },
-            false => {
-                play_sound("assets/backup_cancelled.mp3");
-            },
-        }
         Ok(res)
     }
 

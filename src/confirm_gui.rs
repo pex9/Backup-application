@@ -1,12 +1,12 @@
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Mutex};
 use egui::Context;
 use eframe::NativeOptions;
 
 const APP_NAME: &str = "Emergency Backup";
 struct ConfirmGui {
     choice: Sender<Choice>,
-    controller: Arc<(Mutex<bool>, Condvar)>
+    controller: Arc<Mutex<bool>>
 }
 
 pub enum Choice {
@@ -16,8 +16,8 @@ pub enum Choice {
 }
 
 impl ConfirmGui {
-    pub fn new(choice: Sender<Choice>,controller: Arc<(Mutex<bool>, Condvar)>) -> Self {
-        Self { choice,controller }
+    pub fn new(choice: Sender<Choice>,controller: Arc<Mutex<bool>>) -> Self {
+        Self { choice, controller }
     }
 }
 
@@ -25,8 +25,7 @@ impl eframe::App for ConfirmGui {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         //check if user instead use the gesture and close the gui
         {
-            let (lock, _) = &*self.controller;
-            let guard = lock.lock().unwrap();
+            let guard = self.controller.lock().unwrap();
             if *guard {
                 _frame.close();
                 self.choice.send(Choice::CloseGui).expect("TODO: panic message");
@@ -54,7 +53,7 @@ impl eframe::App for ConfirmGui {
     }
 }
 
-pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<(Mutex<bool>, Condvar)>) {
+pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<Mutex<bool>>) {
     let options = NativeOptions {
         initial_window_size: Some(egui::vec2(250.0, 140.0)),
         drag_and_drop_support: false,

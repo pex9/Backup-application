@@ -1,7 +1,7 @@
 use chrono::Local;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Write};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use sysinfo::{Pid, System};
@@ -37,33 +37,37 @@ pub fn start_monitor() {
     });
 }
 
-pub fn perform_backup(controller: Arc<(Mutex<bool>, Condvar)>) -> Result<(), BackupperError> {
-    let (lock, cvar) = &*controller;
+pub fn perform_backup(controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {    
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
 
-    let mut lk = lock.lock().unwrap();
+        play_sound("assets/backup_started.mp3");
 
-
-    while *lk {
-        lk = cvar.wait(lk).unwrap();
-    }
-    if !*lk {
-        *lk = true;
-        cvar.notify_all(); // Notify other thread es gui to stop
         let backupper = Backupper::new();
-        backupper.perform_backup_with_stats()
+        let backup_result = backupper.perform_backup_with_stats();
+
+        match &backup_result {
+            Ok(_) => play_sound("assets/backup_finished.mp3"),
+            Err(e) => {
+                play_sound("assets/backup_aborted.mp3");
+                println!("Failed to perform backup: {:?}", e);
+            }
+        }
+
+        backup_result
 
     } else {
         Ok(())
     }
 }
 
-pub fn abort_backup(controller: Arc<(Mutex<bool>, Condvar)>) {
-    let (lock, cvar) = &*controller;
-    let mut lk = lock.lock().unwrap();
-    while *lk {
-        lk = cvar.wait(lk).unwrap();
+pub fn abort_backup(controller: Arc<Mutex<bool>>) {
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
+        play_sound("assets/backup_cancelled.mp3");
     }
-    *lk = true;
 }
 
 pub fn get_screensize() -> (u32, u32) {
@@ -80,6 +84,7 @@ pub fn get_screensize() -> (u32, u32) {
 
     (width, height)
 }
+
 pub fn play_sound(path: &str) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
