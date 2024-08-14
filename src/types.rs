@@ -1,5 +1,5 @@
 use std::fmt;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::mouse::Mouse;
 
@@ -140,11 +140,18 @@ impl<'a> Confirm<'a> {
     }
 
 
-    pub fn confirm(&mut self) -> bool {
+    pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> bool {
         let mut prec = self.mouse.get_position().unwrap();
         let mut history = Vec::<Direction>::new();
         let mut last: Option<Direction> = None;
         loop {
+            let lk = controller.lock().unwrap();
+            // If backup is already in progress, exit early
+            if *lk==true {
+                return false;
+            }
+            drop(lk);
+
             let pos = self.mouse.get_position().unwrap();
             // if pos.x-prec.x>=0 {
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {

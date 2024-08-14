@@ -21,9 +21,6 @@ mod sys;
 pub mod types;
 
 fn main() {
-    if !launcher::is_enabled() {
-        launcher::enable();
-    }
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 && args[1] == "--config" {
         main_configuration();
@@ -42,7 +39,7 @@ fn main_background() {
     loop {
         let pos = mouse.get_position().unwrap();
         if pos.x == 0 && pos.y == 0 {
-            if mouse.rectangle_write((screensize.0 as i32)-1, (screensize.1 as i32)-1).unwrap() {
+            if mouse.rectangle_write((screensize.0 as i32) - 1, (screensize.1 as i32) - 1).unwrap() {
                 gesture_identified();
             }
         } else {
@@ -54,30 +51,41 @@ fn main_background() {
 fn gesture_identified() {
     let mut mouse = Mouse::new();
     let controller = Arc::new(Mutex::new(false));
-    let cont1 = Arc::clone(&controller);
+    let cont_gesture = Arc::clone(&controller);
     thread::spawn(move || {
-        if mouse.confirm().unwrap() {
-            perform_backup(cont1).expect("Failed to perform backup");
+        let controller = Arc::clone(&cont_gesture);
+        if mouse.confirm(cont_gesture).unwrap() {
+            println!("Backup started from gesture");
+            perform_backup(controller).expect("Failed to perform backup");
         } else {
-            abort_backup(cont1);
+            println!("Backup aborted from gesture");
+            abort_backup(controller);
         }
     });
+
+    // Start GUI confirmation
     gui_confirmation(controller);
 }
 
-fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
+fn gui_confirmation(controller: Arc<Mutex<bool>>) {
     let (sender, receiver) = std::sync::mpsc::channel();
+    let controller2 = Arc::clone(&controller);
 
-    thread::spawn(move||{
+    thread::spawn(move || {
         match receiver.recv() {
             Ok(choice) => {
                 match choice {
                     Choice::Yes => {
-                        perform_backup(mutex_controller).expect("Failed to perform backup");
+                        println!("Backup started from GUI");
+                        perform_backup(controller).expect("Failed to perform backup");
                     }
                     Choice::No => {
-                        println!("Backup aborted 1");
-                        abort_backup(mutex_controller);
+                        println!("Backup aborted from GUI");
+                        abort_backup(controller);
+                    }
+                    Choice::CloseGui => {
+                        println!("Close Gui Backup");
+                        // no error code provided
                     }
                 }
                 #[cfg(target_os = "macos")]
@@ -87,14 +95,13 @@ fn gui_confirmation(mutex_controller: Arc<Mutex<bool>>) {
             }
             Err(e) => {
                 println!("Backup aborted 2: {:?}", e);
-                abort_backup(mutex_controller);
+                abort_backup(controller);
                 std::process::exit(0);
             }
         }
     });
 
-    run_confirm_gui(sender);
-
+    run_confirm_gui(sender, controller2);
 }
 
 fn main_configuration() {
@@ -102,7 +109,7 @@ fn main_configuration() {
 }
 
 fn main_get_screensize() -> (u32, u32) {
-    let event_loop= event_loop::EventLoop::new();
+    let event_loop = event_loop::EventLoop::new();
     let primary_monitor = event_loop.primary_monitor().unwrap();
     let physical_size = primary_monitor.size();
     let scale_factor = primary_monitor.scale_factor();

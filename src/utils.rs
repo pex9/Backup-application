@@ -1,6 +1,6 @@
 use chrono::Local;
-use std::fs::OpenOptions;
-use std::io::Write;
+use std::fs::{File, OpenOptions};
+use std::io::{BufReader, Write};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -9,6 +9,7 @@ use sysinfo::{Pid, System};
 use crate::backup::{Backupper, BackupperError};
 use std::process::Command;
 use std::env;
+use rodio::{Decoder, OutputStream, Sink};
 
 pub fn start_monitor() {
     // Avvia il thread di monitoraggio CPU ( dovra essere una funzione)
@@ -36,20 +37,37 @@ pub fn start_monitor() {
     });
 }
 
-pub fn perform_backup(mutex_controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {
-    let mut lk = mutex_controller.lock().unwrap();
-    if !*lk {
-        *lk = true;
+pub fn perform_backup(controller: Arc<Mutex<bool>>) -> Result<(), BackupperError> {    
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
+
+        play_sound("assets/backup_started.mp3");
+
         let backupper = Backupper::new();
-        backupper.perform_backup_with_stats()
+        let backup_result = backupper.perform_backup_with_stats();
+
+        match &backup_result {
+            Ok(_) => play_sound("assets/backup_finished.mp3"),
+            Err(e) => {
+                play_sound("assets/backup_aborted.mp3");
+                println!("Failed to perform backup: {:?}", e);
+            }
+        }
+
+        backup_result
+
     } else {
         Ok(())
     }
 }
 
-pub fn abort_backup(mutex_controller: Arc<Mutex<bool>>) {
-    let mut lk = mutex_controller.lock().unwrap();
-    *lk = true;
+pub fn abort_backup(controller: Arc<Mutex<bool>>) {
+    let mut lock = controller.lock().unwrap();
+    if !*lock {
+        *lock = true;
+        play_sound("assets/backup_cancelled.mp3");
+    }
 }
 
 pub fn get_screensize() -> (u32, u32) {
@@ -65,4 +83,19 @@ pub fn get_screensize() -> (u32, u32) {
     let height: u32 = dimensions[1].parse().unwrap_or(0);
 
     (width, height)
+}
+
+pub fn play_sound(path: &str) {
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+
+    // Load a sound from a file, using a path relative to Cargo.toml
+    let file = File::open(path).unwrap();
+    let source = Decoder::new(BufReader::new(file)).unwrap();
+
+    // Create a Sink to play the sound and wait until the audio is finished
+    let sink = Sink::try_new(&stream_handle).unwrap();
+    sink.append(source);
+
+    // Block the current thread until the sound has finished playing
+    sink.sleep_until_end();
 }
