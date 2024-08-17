@@ -38,7 +38,7 @@ to do
 
 2. **Triggering a Backup**:
    - To initiate a backup, perform the rectangle mouse gesture
-   - Confirm the backup by performing the confirmation gesture using '∨' and to cancel using '∧' or using the gui
+   - Confirm the backup by performing the confirmation gesture using '∧' and to cancel using '∨' or using the gui
    
 3. **Monitoring**:
    - The application logs its CPU usage every 2 minutes. These logs can be found in the designated log file.
