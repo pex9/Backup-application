@@ -20,7 +20,6 @@ impl Mouse {
 
     // Press the button of the mouse until it is released
     pub fn press<'a>(&self, button: &'a Keys) -> Result<(), Box<dyn std::error::Error + 'a>> {
-        self.track_click();
         self.0.press(button)
     }
 
@@ -76,6 +75,7 @@ impl Mouse {
         Ok(res)
     }
 
+    /* WE DON'T NEED THIS FUNCTIONS ANYMORE
     fn on_three_clicks(&self) {
         println!("Three clicks detected. Starting action...");
         // Add code to start the desired action here
@@ -93,6 +93,7 @@ impl Mouse {
     pub fn get_click_count(&self) -> u32 {
         CLICK_COUNT.load(Ordering::SeqCst)
     }
+    */
 
     pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
         self.0.is_pressed()

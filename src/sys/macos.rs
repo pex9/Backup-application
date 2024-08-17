@@ -129,6 +129,9 @@ impl Mouse {
     }
 
     pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
-        unimplemented!()
+        CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+            .or(Err(Error::CGEventSourceStateInvalid))?
+            .key_state(CGEventType::LeftMouseDown, CGMouseButton::Left)
+            .or(Err(Error::CGEventNotCreated))
     }
 }
