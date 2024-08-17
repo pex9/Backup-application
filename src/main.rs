@@ -10,6 +10,7 @@ mod launcher;
 use std::sync::{Arc, Mutex};
 use std::{env, thread};
 
+use config::CONFIG_FILE_PATH;
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
 use mouse::Mouse;
@@ -33,6 +34,10 @@ fn main() {
 }
 
 fn main_background() {
+    if !std::path::Path::new(CONFIG_FILE_PATH).exists() {
+        println!("First launch of the application: no configuration found. Please run the program with the --config flag to configure it.");
+        return;
+    }
     utils::start_monitor();
     let mut mouse = Mouse::new();
     let screensize = get_screensize();
@@ -42,6 +47,7 @@ fn main_background() {
             if mouse.rectangle_write((screensize.0 as i32) - 1, (screensize.1 as i32) - 1).unwrap() {
                 gesture_identified();
             }
+            thread::sleep(std::time::Duration::from_millis(100));
         } else {
             thread::sleep(std::time::Duration::from_secs(1));
         }
@@ -54,6 +60,7 @@ fn gesture_identified() {
     let cont_gesture = Arc::clone(&controller);
     thread::spawn(move || {
         let controller = Arc::clone(&cont_gesture);
+        thread::sleep(std::time::Duration::from_secs(1));
         if mouse.confirm(cont_gesture).unwrap() {
             println!("Backup started from gesture");
             perform_backup(controller).expect("Failed to perform backup");
@@ -105,6 +112,13 @@ fn gui_confirmation(controller: Arc<Mutex<bool>>) {
 }
 
 fn main_configuration() {
+    let conf_path = std::path::Path::new(CONFIG_FILE_PATH);
+    if conf_path.parent().is_none() || !conf_path.parent().unwrap().exists() {
+        if let Err(err) = std::fs::create_dir_all(conf_path.parent().unwrap()) {
+            eprintln!("Failed to create config folder: {}", err);
+        }
+        println!("New configuration created");
+    }
     run_config_gui().unwrap();
 }
 

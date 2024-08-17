@@ -3,6 +3,9 @@ use std::{error::Error, fs::File, io::BufReader, path::Path};
 use crate::launcher::{disable, enable, is_enabled};
 use serde::{Deserialize, Serialize};
 
+pub const CONFIG_FILE_PATH: &str = "config/backup_info.json";
+pub const CPU_USAGE_LOG_PATH: &str = "config/cpu_usage.log";
+
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct BackupConfig {
     pub source: String,
@@ -31,8 +34,7 @@ impl BackupConfig {
     }
 
     pub fn save_info(&self) -> Result<(), Box<dyn Error>> {
-        let path = "config/backup_info.json";
-        let file = File::create(path)?;
+        let file = File::create(CONFIG_FILE_PATH)?;
         serde_json::to_writer(file, self)?;
         if self.autostart_enabled == true && is_enabled() == false {
             enable();
@@ -43,9 +45,8 @@ impl BackupConfig {
     }
 
     fn load_info(&mut self) {
-        let path = "config/backup_info.json";
-        if Path::new(path).exists() {
-            let file = File::open(path).expect("Unable to open file");
+        if Path::new(CONFIG_FILE_PATH).exists() {
+            let file = File::open(CONFIG_FILE_PATH).expect("Unable to open file");
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
                 Ok(loaded_info) => {
