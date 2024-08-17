@@ -2,26 +2,30 @@ use chrono::Local;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Write};
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::{path, thread};
 use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
+use crate::config::CPU_USAGE_LOG_PATH;
 use std::process::Command;
 use std::env;
 use rodio::{Decoder, OutputStream, Sink};
 
 pub fn start_monitor() {
-    // Avvia il thread di monitoraggio CPU ( dovra essere una funzione)
+    // Avvia il thread di monitoraggio CPU
     let sys = Arc::new(Mutex::new(System::new_all()));
     let sys_clone = Arc::clone(&sys);
     thread::spawn(move || {
         let pid = std::process::id();
-        let pid = Pid::from_u32(pid); // Usa un metodo per creare Pid
+        let pid = Pid::from_u32(pid);
+        if let Err(err) = std::fs::create_dir_all(path::Path::new(CPU_USAGE_LOG_PATH).parent().unwrap()) {
+            eprintln!("Failed to create config folder: {}", err);
+        }
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open("config/cpu_usage.log")
+            .open(CPU_USAGE_LOG_PATH)
             .unwrap();
         loop {
             let mut sys = sys_clone.lock().unwrap();

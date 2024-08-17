@@ -153,13 +153,10 @@ impl<'a> Confirm<'a> {
             drop(lk);
 
             let pos = self.mouse.get_position().unwrap();
-            // if pos.x-prec.x>=0 {
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
                 if last == None {
                     self.init = Option::from(prec.clone());
-                    // println!("Init: {}", self.init.unwrap());               // Debugging
                 }
-                // println!("{} - {}: {}", pos.y, prec.y, pos.y-prec.y);       // Debugging
 
                 // Positive
                 if pos.y-prec.y<0 {
@@ -203,20 +200,14 @@ impl<'a> Confirm<'a> {
             if history.len() == 2 {
                 if history[0] == Direction::Positive && history[1] == Direction::Negative {
                     if self.init.unwrap().y <= pos.y  { 
-                        // println!("Init: {}\n Pos: {}", self.init.unwrap(), pos);     // Debugging
                         return true;
                     }
                 }
                 else if history[0] == Direction::Negative && history[1] == Direction::Positive {
                     if self.init.unwrap().y >= pos.y {
-                        // println!("Init: {}\n Pos: {}", self.init.unwrap(), pos);     // Debugging
                         return false;
                     }
                 }
-                /*else {
-                    last = None;
-                    history.clear();
-                }*/
             }
             prec = pos;
         }

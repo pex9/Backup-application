@@ -96,26 +96,6 @@ impl Mouse {
         }
     }
 
-    pub fn move_to(&self, x: i32, y: i32) -> Result<(), Box<dyn std::error::Error>> {
-        unsafe {
-            let set_cursor_pos: libloading::Symbol<unsafe extern "C" fn(x: i32, y: i32)> =
-                self.user32.get(b"SetCursorPos")?;
-            Ok(set_cursor_pos(x, y))
-        }
-    }
-
-    pub fn press(&self, button: &Keys) -> Result<(), Box<dyn std::error::Error>> {
-        let (button, data) = Mouse::translate_button(button);
-        let code = win_translate_key((&Keys::DOWN, button));
-        self.mouse_event(code, 0, 0, data, 0)
-    }
-
-    pub fn release(&self, button: &Keys) -> Result<(), Box<dyn std::error::Error>> {
-        let (button, data) = Mouse::translate_button(button);
-        let code = win_translate_key((&Keys::UP, button));
-        self.mouse_event(code, 0, 0, data, 0)
-    }
-
     pub fn get_position(&self) -> Result<Point, Box<dyn std::error::Error>> {
         let mut pos: POINT = POINT { x: 0, y: 0 };
         unsafe {
@@ -124,14 +104,5 @@ impl Mouse {
             get_cursor_pos(&mut pos);
             Ok(pos.into())
         }
-    }
-
-    pub fn is_pressed(&self) -> Result<bool, Box<dyn std::error::Error>> {
-        Ok(unsafe { GetAsyncKeyState(VK_LBUTTON) } != 0)
-    }
-
-    pub fn wheel(&self, delta: i32) -> Result<(), Box<dyn std::error::Error>> {
-        let code = win_translate_key((&Keys::WHEEL, &Keys::VERTICAL));
-        self.mouse_event(code, 0, 0, delta * 120, 0)
     }
 }
