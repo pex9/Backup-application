@@ -7,6 +7,7 @@ use image::imageops::FilterType;
 use rfd::FileDialog;
 use std::error::Error;
 use std::time::{Duration, Instant};
+use crate::utils::load_icon;
 
 #[derive(Debug)]
 pub struct BackupConfigGUI {
@@ -50,6 +51,7 @@ impl eframe::App for BackupConfigGUI {
                     ui.label("Failed to load image.");
                 }
                 ui.add_space(3.0);
+
                 ui.heading("Backup application");
 
                 ui.add_space(5.0);
@@ -139,7 +141,7 @@ impl eframe::App for BackupConfigGUI {
                                     self.set_save_message("Info saved successfully".to_string())
                                 }
                                 Err(e) => {
-                                    self.set_save_message(format!("Failed to save info: {:?}", e))
+                                    self.set_save_message(format!("Failed to save info: {}", e))
                                 }
                             };
                         }
@@ -172,11 +174,12 @@ fn load_image_texture(ctx: &egui::Context, path: &str, size: (u32, u32)) -> Opti
 
 pub fn run_config_gui() -> Result<(), Box<dyn Error>> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-
+    let icon = load_icon("assets/backup-file.png")?;
     let options = eframe::NativeOptions {
         initial_window_size: Some([640.0, 560.0].into()),
         drag_and_drop_support: false,
         resizable: false,
+        icon_data: Some(icon),
         ..Default::default()
     };
 

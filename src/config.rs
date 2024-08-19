@@ -34,6 +34,12 @@ impl BackupConfig {
     }
 
     pub fn save_info(&self) -> Result<(), Box<dyn Error>> {
+        if self.source.is_empty() || self.destination.is_empty() || self.log_filename.is_empty() {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Source, Destination, and Log Filename must be set before saving.",
+            )));
+        }
         let file = File::create(CONFIG_FILE_PATH)?;
         serde_json::to_writer(file, self)?;
         if self.autostart_enabled == true && is_enabled() == false {

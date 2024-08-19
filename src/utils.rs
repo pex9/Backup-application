@@ -10,6 +10,8 @@ use crate::backup::{Backupper, BackupperError};
 use crate::config::CPU_USAGE_LOG_PATH;
 use std::process::Command;
 use std::env;
+use std::error::Error;
+use std::path::Path;
 use rodio::{Decoder, OutputStream, Sink};
 
 pub fn start_monitor() {
@@ -101,4 +103,17 @@ pub fn play_sound(path: &str) {
 
     // Block the current thread until the sound has finished playing
     sink.sleep_until_end();
+}
+pub fn load_icon(path: &str) -> Result<eframe::IconData, Box<dyn Error>> {
+    // Load the image from the specified path
+    let image = image::open(&Path::new(path))?.into_rgba8();
+    let (width, height) = image.dimensions();
+    let pixels = image.into_raw();
+
+    // Return the icon data
+    Ok(eframe::IconData {
+        rgba: pixels,
+        width,
+        height,
+    })
 }

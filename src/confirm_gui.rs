@@ -1,7 +1,9 @@
+use std::error::Error;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use egui::Context;
 use eframe::NativeOptions;
+use crate::utils::load_icon;
 
 const APP_NAME: &str = "Emergency Backup";
 struct ConfirmGui {
@@ -53,11 +55,13 @@ impl eframe::App for ConfirmGui {
     }
 }
 
-pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<Mutex<bool>>) {
+pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<Mutex<bool>>) -> Result<(), Box<dyn Error>>{
+    let icon = load_icon("assets/backup-file.png")?;
     let options = NativeOptions {
         initial_window_size: Some(egui::vec2(250.0, 140.0)),
         drag_and_drop_support: false,
         resizable: false,
+        icon_data: Some(icon),
         ..Default::default()
     };
 
@@ -65,5 +69,6 @@ pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<Mutex<bool>>) {
         APP_NAME,
         options,
         Box::new(move |_cc| Box::new(ConfirmGui::new(sender,controller))),
-    )
+    );
+    Ok(())
 }
