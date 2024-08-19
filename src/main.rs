@@ -132,3 +132,64 @@ fn main_get_screensize() -> (u32, u32) {
     let height = monitor_size.height;
     (width, height)
 }
+/*
+extern crate image;
+extern crate gif;
+
+use image::{Rgba, RgbaImage, ImageBuffer};
+use gif::{Encoder, Frame, Repeat};
+use std::fs::File;
+use std::error::Error;
+
+fn draw_character(img: &mut RgbaImage, x: u32, y: u32, char: char) {
+    let char_color = Rgba([0, 0, 0, 255]); // Black color
+    let font_size = 20;
+    let font: Vec<u8> = vec![0; font_size * font_size]; // Placeholder for character bitmap
+
+    // Create a simple bitmap for the character
+    // This would normally be replaced with proper font rendering
+    for (i, pixel) in font.iter().enumerate() {
+        let row = (i / font_size) as u32;
+        let col = (i % font_size) as u32;
+        if *pixel == 1 {
+            img.put_pixel(x + col, y + row, char_color);
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // Dimensions of the GIF
+    let width = 100;
+    let height = 100;
+
+    // Prepare the frames
+    let mut frames = Vec::new();
+    for i in 0..height {
+        let mut frame = RgbaImage::new(width, height);
+
+        // Draw the character at the current position
+        let char_pos = (height - i) % height;
+        draw_character(&mut frame, width / 2 - 10, char_pos, '∧');
+
+        // Add the frame to the frames list
+        frames.push(frame);
+    }
+
+    // Create the GIF file
+    let mut output_file = File::create("character_animation.gif")?;
+    let mut encoder = Encoder::new(&mut output_file, width as u16, height as u16, &[])?;
+    encoder.set_repeat(Repeat::Infinite)?;
+
+    // Add each frame to the GIF
+    for frame in frames {
+        let mut gif_frame = Frame::from_rgba_speed(width as u16, height as u16, &mut frame.into_raw(), 10);
+        gif_frame.delay = 10; // 100ms per frame
+        encoder.write_frame(&gif_frame)?;
+    }
+
+    println!("GIF created successfully!");
+
+    Ok(())
+}*/
+
+

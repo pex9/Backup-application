@@ -43,3 +43,4 @@ rebackup = "1.0.2"
 cpu-time = "1.0.0"
 winapi = { version = "0.3", features = ["winuser"] }
 rodio = "0.19.0"
+gif = "0.11.2"
