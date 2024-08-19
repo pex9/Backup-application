@@ -1,9 +1,8 @@
 use crate::config::BackupConfig;
 use crate::launcher::is_enabled;
 use eframe::egui;
-use eframe::egui::{ColorImage, TextureHandle};
+use eframe::egui::ColorImage;
 use image::{AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
-use image::imageops::FilterType;
 use rfd::FileDialog;
 use std::error::Error;
 use std::fs::File;
@@ -203,22 +202,6 @@ impl eframe::App for BackupConfigGUI {
             });
         });
     }
-}
-
-fn load_image_texture(ctx: &egui::Context, path: &str, size: (u32, u32)) -> Option<TextureHandle> {
-    let image = match image::open(path) {
-        Ok(image) => image.to_rgba8(),
-        Err(err) => {
-            eprintln!("Failed to load image: {:?}", err);
-            return None;
-        }
-    };
-
-    let resized_image = image::imageops::resize(&image, size.0, size.1, FilterType::Lanczos3);
-    let color_image =
-        ColorImage::from_rgba_unmultiplied([size.0 as usize, size.1 as usize], &resized_image);
-
-    Some(ctx.load_texture("backup-file", color_image, Default::default()))
 }
 
 fn load_gif_frames(path: &str) -> Result<Vec<ColorImage>, Box<dyn Error>> {
