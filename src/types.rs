@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, thread};
 use std::sync::{Arc, Mutex};
 
 use crate::mouse::Mouse;
@@ -84,6 +84,7 @@ impl<'a> Rectangle<'a> {
         
         // Left -> Right
         while self.mouse.get_position().unwrap().x < self.x + self.width && flag==true {
+            thread::sleep(std::time::Duration::from_millis(100));
             match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
                 true => {},
                 false => flag = false 
@@ -93,6 +94,7 @@ impl<'a> Rectangle<'a> {
 
         // Up -> Down
         while self.mouse.get_position().unwrap().y < self.y + self.height && flag==true{
+            thread::sleep(std::time::Duration::from_millis(100));
             match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
                 true => {},
                 false => flag = false
@@ -102,6 +104,7 @@ impl<'a> Rectangle<'a> {
         
         // Right -> Left
         while self.mouse.get_position().unwrap().x > self.x-self.width && flag==true {
+            thread::sleep(std::time::Duration::from_millis(100));
             match self.mouse.get_position().unwrap().y < self.y + TOL && self.mouse.get_position().unwrap().y > self.y - TOL {
                 true => {},
                 false => flag = false
@@ -111,6 +114,7 @@ impl<'a> Rectangle<'a> {
 
         // Down -> Up
         while self.mouse.get_position().unwrap().y > self.y-self.height && flag==true {
+            thread::sleep(std::time::Duration::from_millis(100));
             match self.mouse.get_position().unwrap().x < self.x + TOL && self.mouse.get_position().unwrap().x > self.x - TOL {
                 true => {},
                 false => flag = false
@@ -151,6 +155,8 @@ impl<'a> Confirm<'a> {
                 return false;
             }
             drop(lk);
+
+            thread::sleep(std::time::Duration::from_millis(100));
 
             let pos = self.mouse.get_position().unwrap();
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
