@@ -79,7 +79,6 @@ pub fn get_screensize() -> (u32, u32) {
         .arg("--screensize")
         .output()
         .expect("Failed to execute command");
-
     let stdout = String::from_utf8_lossy(&output.stdout);
     let dimensions: Vec<&str> = stdout.trim().split('-').collect();
 
