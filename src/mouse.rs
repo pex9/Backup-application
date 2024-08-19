@@ -23,6 +23,7 @@ impl Mouse {
     ) -> Result<bool, Box<dyn std::error::Error>> {
         let data = Arc::new(self);
         let mut rect = Rectangle::new(Arc::clone(&data), width, height);
+        play_sound("assets/start_command.mp3");
         let res = rect.draw_rectangle();
         if res {
             play_sound("assets/rectangle_drawn.mp3");
@@ -33,6 +34,7 @@ impl Mouse {
     pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> Result<bool, Box<dyn std::error::Error>> {
         let data = Arc::new(self);
         let mut conf = Confirm::new(Arc::clone(&data));
+        play_sound("assets/start_command.mp3");
         let res = conf.confirm(controller);
         Ok(res)
     }
