@@ -28,9 +28,9 @@ impl BackupConfigGUI {
         config.autostart_enabled = is_enabled();
 
         let gif_paths_and_texts = vec![
-            ("assets/example1.gif", "First, draw a rectangle starting from the top left and follow all your screen of PC. You will receive the confirmation/or error thanks to audio messages."),
-            ("assets/example2.gif", "To confirm the backup, you have to draw the gesture below or click on confirm in the GUI dialog."),
-            ("assets/example3.gif", "If you don't want to go down, you have to draw the gesture below or selecting cancel in the GUI."),
+            ("assets/rectangle-command.gif", "First, draw a rectangle starting from the top left and follow all your screen of PC. You will receive the confirmation/or error thanks to audio messages."),
+            ("assets/confirm.gif", "To confirm the backup, you have to draw the gesture below or click on confirm in the GUI dialog."),
+            ("assets/cancel.gif", "If you don't want to go down, you have to draw the gesture below or selecting cancel in the GUI."),
         ];
 
         let gif_frames = gif_paths_and_texts.into_iter()
