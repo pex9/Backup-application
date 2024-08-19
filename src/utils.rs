@@ -57,7 +57,17 @@ pub fn perform_backup(controller: Arc<Mutex<bool>>) -> Result<(), BackupperError
             Ok(_) => play_sound("assets/backup_finished.mp3"),
             Err(e) => {
                 play_sound("assets/backup_aborted.mp3");
-                println!("Failed to perform backup: {:?}", e);
+                match e {
+                    BackupperError::BkpError(e) => {
+                        println!("Failed to perform backup: {:?}", e);
+                    },
+                    BackupperError::IoError(e) => {
+                        println!("Failed to read/write file: {:?}", e);
+                    },
+                    BackupperError::WalkerError(e) => {
+                        println!("Failed to list files: {:?}", e);
+                    }
+                }
             }
         }
 

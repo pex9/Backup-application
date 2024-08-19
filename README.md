@@ -26,15 +26,12 @@ This Rust application is designed to perform backups on a PC, especially in scen
 - **Background Operation**:
   - The application runs in the background and is installed during the PC's bootstrap process, ensuring that it starts automatically when the computer boots up in different enviroment.
 
-## Installation
-
-to do
-
 ## Usage
 
 1. **Configuration**: 
    - Edit the configuration file to specify the source and the destination of the backup.
    - Specify what directories/extensions to exclude
+   - Launch the application using the option `--config` to start the configuration GUI
 
 2. **Triggering a Backup**:
    - To initiate a backup, perform the rectangle mouse gesture
