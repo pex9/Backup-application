@@ -31,7 +31,7 @@ impl PartialEq for Point {
 
 impl Eq for Point {}
 
-const TOL: i32 = 50;
+const TOL: i32 = 60;
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Positive, 
@@ -156,9 +156,16 @@ impl<'a> Confirm<'a> {
             }
             drop(lk);
 
-            thread::sleep(std::time::Duration::from_millis(10));
+            thread::sleep(std::time::Duration::from_millis(20));
+
 
             let pos = self.mouse.get_position().unwrap();
+            // Testing
+            println!("Prec: {:?}", prec);
+            println!("Actual: {:?}", pos);
+            println!("Diff: {:?}", pos.x+prec.y-pos.y-prec.x);
+            println!("History: {:?}", history);
+
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
                 if last == None {
                     self.init = Option::from(prec.clone());
@@ -171,8 +178,15 @@ impl<'a> Confirm<'a> {
                             Direction::Positive => {
                             },
                             Direction::Negative => {
-                                history.push(Direction::Positive);
-                                last = Option::from(Direction::Positive);
+                                if self.init.unwrap().x + TOL <= pos.x {
+                                    history.push(Direction::Positive);
+                                    last = Option::from(Direction::Positive);
+                                }
+                                else {
+                                    last = None;
+                                    self.init = None;
+                                    history.clear();
+                                }
                             }
                         }
                         None => {
@@ -186,8 +200,15 @@ impl<'a> Confirm<'a> {
                         Some(dir) => match dir {
                             Direction::Negative => {},
                             Direction::Positive => {
-                                history.push(Direction::Negative);
-                                last = Option::from(Direction::Negative);
+                                if self.init.unwrap().x + TOL <= pos.x {
+                                    history.push(Direction::Negative);
+                                    last = Option::from(Direction::Negative);
+                                }
+                                else {
+                                    last = None;
+                                    self.init = None;
+                                    history.clear();
+                                }
                             }
                         }
                         None => {
@@ -196,13 +217,13 @@ impl<'a> Confirm<'a> {
                         }
                     }
                 }
-            } 
+            }
             else {
                 last = None;
                 self.init = None;
                 history.clear();
-            }
-
+            } 
+            
             if history.len() == 2 {
                 if history[0] == Direction::Positive && history[1] == Direction::Negative {
                     if self.init.unwrap().y <= pos.y  { 
@@ -214,7 +235,14 @@ impl<'a> Confirm<'a> {
                         return false;
                     }
                 }
+                else {
+                    last = None;
+                    self.init = None;
+                    history.clear();
+                }
             }
+            
+
             prec = pos;
         }
     }  
