@@ -160,12 +160,6 @@ impl<'a> Confirm<'a> {
 
 
             let pos = self.mouse.get_position().unwrap();
-            // Testing
-            println!("Prec: {:?}", prec);
-            println!("Actual: {:?}", pos);
-            println!("Diff: {:?}", pos.x+prec.y-pos.y-prec.x);
-            println!("History: {:?}", history);
-
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
                 if last == None {
                     self.init = Option::from(prec.clone());

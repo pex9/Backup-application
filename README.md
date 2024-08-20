@@ -48,6 +48,14 @@ This project was developed by **Group 3** as part of our coursework. We collabor
 
 ## Screenshot 
 
+**Configuration**
+
+  ![alt text](screenshots/config_main.png)   ![alt text](screenshots/config_instructions.png)
+
+**Confirmation POPUP**
+
+  ![alt text](screenshots/confirm_gui.png)
+
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more details.
