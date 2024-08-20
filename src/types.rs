@@ -156,7 +156,7 @@ impl<'a> Confirm<'a> {
             }
             drop(lk);
 
-            thread::sleep(std::time::Duration::from_millis(100));
+            thread::sleep(std::time::Duration::from_millis(10));
 
             let pos = self.mouse.get_position().unwrap();
             if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {

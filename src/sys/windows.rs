@@ -4,8 +4,6 @@
 use crate::types::{keys::Keys, Point};
 use libloading::Library;
 use winapi::shared::windef::POINT;
-use winapi::um::winuser::{GetAsyncKeyState, VK_LBUTTON};
-
 
 
 const MOUSEEVENTF_ABSOLUTE: i32 = 0x8000;
