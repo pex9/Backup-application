@@ -2,16 +2,16 @@ use chrono::Local;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Write};
 use std::sync::{Arc, Mutex};
-use std::{path, thread};
+use std::thread;
 use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
-use crate::config::{CONFIG_FILE_PATH, CPU_USAGE_LOG_PATH};
+use crate::config::CPU_USAGE_LOG_PATH;
 use std::process::Command;
 use std::env;
 use std::error::Error;
-use std::path::{Path,PathBuf};
+use std::path::PathBuf;
 use rodio::{Decoder, OutputStream, Sink};
 use home;
 
@@ -105,7 +105,7 @@ pub fn play_sound(path: &str) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
     // Load a sound from a file, using a path relative to Cargo.toml
-    let file = File::open(path).unwrap();
+    let file = File::open(get_project_path(path)).unwrap();
     let source = Decoder::new(BufReader::new(file)).unwrap();
 
     // Create a Sink to play the sound and wait until the audio is finished
@@ -118,7 +118,7 @@ pub fn play_sound(path: &str) {
 
 pub fn load_icon(path: &str) -> Result<eframe::IconData, Box<dyn Error>> {
     // Load the image from the specified path
-    let image = image::open(&Path::new(path))?.into_rgba8();
+    let image = image::open(get_project_path(path))?.into_rgba8();
     let (width, height) = image.dimensions();
     let pixels = image.into_raw();
 
@@ -137,4 +137,12 @@ pub fn get_abs_path(relative: &str) -> PathBuf {
         }
         None => panic!("Failed to get user home")
     }
+}
+pub fn get_project_path(relative: &str) -> PathBuf{
+    option_env!("CARGO_MANIFEST_DIR").map_or_else(|| {
+        let exe_path = env::current_exe().expect("Failed to get exe path");
+        exe_path.parent().expect("Failed to get exe dir").to_path_buf()
+    }, |crate_dir| {
+        PathBuf::from(crate_dir)
+    }).join(relative)
 }

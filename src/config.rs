@@ -1,4 +1,4 @@
-use std::{error::Error, fs::File, io::BufReader, path::Path};
+use std::{error::Error, fs::File, io::BufReader};
 
 use crate::launcher::{disable, enable, is_enabled};
 use crate::utils::get_abs_path;
