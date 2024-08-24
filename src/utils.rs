@@ -31,6 +31,7 @@ pub fn start_monitor() {
             .open(get_abs_path(CPU_USAGE_LOG_PATH))
             .unwrap();
         loop {
+            thread::sleep(Duration::from_secs(120)); // Attendi 2 minuti
             let mut sys = sys_clone.lock().unwrap();
             sys.refresh_process(pid);
             if let Some(process) = sys.process(pid) {
@@ -39,7 +40,6 @@ pub fn start_monitor() {
                 let datetime_str = now.format("%d/%m/%Y %H:%M:%S").to_string();
                 writeln!(file, "{} - CPU usage: {:.2}%", datetime_str, cpu_usage).expect("Failed to store logs");
             }
-            thread::sleep(Duration::from_secs(120)); // Attendi 2 minuti
         }
     });
 }
