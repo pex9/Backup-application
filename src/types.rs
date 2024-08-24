@@ -31,7 +31,7 @@ impl PartialEq for Point {
 
 impl Eq for Point {}
 
-const TOL: i32 = 60;
+const TOL: i32 = 40;
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Positive, 
@@ -143,7 +143,7 @@ impl<'a> Confirm<'a> {
         }
     }
 
-
+    /*
     pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> bool {
         let mut prec = self.mouse.get_position().unwrap();
         let mut history = Vec::<Direction>::new();
@@ -189,6 +189,7 @@ impl<'a> Confirm<'a> {
                         }
                     }
                 }
+                // Negative
                 else if pos.y-prec.y>0 {
                     match last {
                         Some(dir) => match dir {
@@ -235,7 +236,56 @@ impl<'a> Confirm<'a> {
                     history.clear();
                 }
             }
+
+            prec = pos;
+        }
+    }
+    */
+
+    /* new confirm gestures */
+    pub fn confirm(&mut self, controller: Arc<Mutex<bool>>) -> bool {
+        let mut prec = self.mouse.get_position().unwrap();
+        let mut last = None;
+        let depth = 300;
+
+        loop {
+            let lk = controller.lock().unwrap();
+            // If backup is already in progress, exit early
+            if *lk==true {
+                return false;
+            }
+            drop(lk);
+
+            thread::sleep(std::time::Duration::from_millis(100));
+
+            let pos = self.mouse.get_position().unwrap();
             
+            // Confirm
+            if pos.x < prec.x+TOL && pos.x > prec.x-TOL && pos.y >= prec.y {    
+                if last != Some(Direction::Positive) {
+                    self.init = Option::from(prec.clone());
+                    last = Some(Direction::Positive);
+                }    
+
+                if pos.y-self.init.unwrap().y > depth {
+                    return true;
+                }                
+            }
+            // Abort
+            else if pos.y < prec.y+TOL && pos.y > prec.y-TOL && pos.x >= prec.x {
+                if last != Some(Direction::Negative) {
+                    self.init = Option::from(prec.clone());
+                    last = Some(Direction::Negative);
+                }
+
+                if pos.x-self.init.unwrap().x > depth {
+                    return false;
+                }
+            }
+            else {
+                last = None;
+                self.init = None;
+            }
 
             prec = pos;
         }
