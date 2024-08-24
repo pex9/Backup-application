@@ -14,7 +14,7 @@ use config::CONFIG_FILE_PATH;
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
 use mouse::Mouse;
-use utils::{abort_backup, get_screensize, perform_backup};
+use utils::{abort_backup, get_screensize, perform_backup, get_abs_path};
 use winit::event_loop;
 
 mod mouse;
@@ -34,7 +34,7 @@ fn main() {
 }
 
 fn main_background() {
-    if !std::path::Path::new(CONFIG_FILE_PATH).exists() {
+    if !get_abs_path(CONFIG_FILE_PATH).exists() {
         println!("First launch of the application: no configuration found. Please run the program with the --config flag to configure it.");
         return;
     }
@@ -111,7 +111,7 @@ fn gui_confirmation(controller: Arc<Mutex<bool>>) {
 }
 
 fn main_configuration() {
-    let conf_path = std::path::Path::new(CONFIG_FILE_PATH);
+    let conf_path = get_abs_path(CONFIG_FILE_PATH);
     if conf_path.parent().is_none() || !conf_path.parent().unwrap().exists() {
         if let Err(err) = std::fs::create_dir_all(conf_path.parent().unwrap()) {
             eprintln!("Failed to create config folder: {}", err);

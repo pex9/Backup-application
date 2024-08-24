@@ -7,12 +7,13 @@ use std::time::Duration;
 use sysinfo::{Pid, System};
 
 use crate::backup::{Backupper, BackupperError};
-use crate::config::CPU_USAGE_LOG_PATH;
+use crate::config::{CONFIG_FILE_PATH, CPU_USAGE_LOG_PATH};
 use std::process::Command;
 use std::env;
 use std::error::Error;
-use std::path::Path;
+use std::path::{Path,PathBuf};
 use rodio::{Decoder, OutputStream, Sink};
+use home;
 
 pub fn start_monitor() {
     // Avvia il thread di monitoraggio CPU
@@ -21,13 +22,13 @@ pub fn start_monitor() {
     thread::spawn(move || {
         let pid = std::process::id();
         let pid = Pid::from_u32(pid);
-        if let Err(err) = std::fs::create_dir_all(path::Path::new(CPU_USAGE_LOG_PATH).parent().unwrap()) {
+        if let Err(err) = std::fs::create_dir_all(get_abs_path(CPU_USAGE_LOG_PATH).parent().unwrap()) {
             eprintln!("Failed to create config folder: {}", err);
         }
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(CPU_USAGE_LOG_PATH)
+            .open(get_abs_path(CPU_USAGE_LOG_PATH))
             .unwrap();
         loop {
             let mut sys = sys_clone.lock().unwrap();
@@ -114,6 +115,7 @@ pub fn play_sound(path: &str) {
     // Block the current thread until the sound has finished playing
     sink.sleep_until_end();
 }
+
 pub fn load_icon(path: &str) -> Result<eframe::IconData, Box<dyn Error>> {
     // Load the image from the specified path
     let image = image::open(&Path::new(path))?.into_rgba8();
@@ -126,4 +128,13 @@ pub fn load_icon(path: &str) -> Result<eframe::IconData, Box<dyn Error>> {
         width,
         height,
     })
+}
+
+pub fn get_abs_path(relative: &str) -> PathBuf {
+    match home::home_dir() {
+        Some(path) => {
+            path.join(relative)
+        }
+        None => panic!("Failed to get user home")
+    }
 }

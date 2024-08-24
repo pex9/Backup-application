@@ -1,10 +1,11 @@
 use std::{error::Error, fs::File, io::BufReader, path::Path};
 
 use crate::launcher::{disable, enable, is_enabled};
+use crate::utils::get_abs_path;
 use serde::{Deserialize, Serialize};
 
-pub const CONFIG_FILE_PATH: &str = "config/backup_info.json";
-pub const CPU_USAGE_LOG_PATH: &str = "config/cpu_usage.log";
+pub const CONFIG_FILE_PATH: &str = "emergency_backup/backup_info.json";
+pub const CPU_USAGE_LOG_PATH: &str = "emergency_backup/cpu_usage.log";
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct BackupConfig {
@@ -40,7 +41,7 @@ impl BackupConfig {
                 "Source, Destination, and Log Filename must be set before saving.",
             )));
         }
-        let file = File::create(CONFIG_FILE_PATH)?;
+        let file = File::create(get_abs_path(CONFIG_FILE_PATH))?;
         serde_json::to_writer(file, self)?;
         if self.autostart_enabled == true && is_enabled() == false {
             enable();
@@ -51,8 +52,8 @@ impl BackupConfig {
     }
 
     fn load_info(&mut self) {
-        if Path::new(CONFIG_FILE_PATH).exists() {
-            let file = File::open(CONFIG_FILE_PATH).expect("Unable to open file");
+        if get_abs_path(CONFIG_FILE_PATH).exists() {
+            let file = File::open(get_abs_path(CONFIG_FILE_PATH)).expect("Unable to open file");
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
                 Ok(loaded_info) => {
