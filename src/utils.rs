@@ -138,6 +138,7 @@ pub fn get_abs_path(relative: &str) -> PathBuf {
         None => panic!("Failed to get user home")
     }
 }
+
 pub fn get_project_path(relative: &str) -> PathBuf{
     option_env!("CARGO_MANIFEST_DIR").map_or_else(|| {
         let exe_path = env::current_exe().expect("Failed to get exe path");
