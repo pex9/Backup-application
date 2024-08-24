@@ -50,20 +50,20 @@ This project was developed by **Group 3** as part of our coursework. We collabor
 
 **Configuration**
 
-![alt text](screenshots/config_main.png) 
+![Configuration GUI](screenshots/config_main.png) 
 
 The backup app's GUI lets you configure settings easily. 
 It features an "Instructions" button that shows GIFs explaining key actions like starting, confirming, or canceling backups. You can choose the source and destination folders, name the backup log, and exclude specific file types or directories. There's a checkbox to enable autostart, and a "Save options" button to store your settings with feedback.
 A "Close Window" button exits the app.
 
-![alt text](screenshots/config_instructions.png)
+![Instructions](screenshots/config_instructions.png)
 
 The "Instructions" section in the backup app's GUI displays animated GIFs with short explanations for key actions. 
 It shows how to start a backup, confirm it, or cancel it, guiding the user through each step visually. The instructions are toggled on or off with a single button, making it easy to access help when needed.
 
 **Confirmation POPUP**
 
-![alt text](screenshots/confirm_gui.png)
+![Confirmation](screenshots/confirm_gui.png)
 
 The Confirm GUI is a simple pop-up that asks if you want to start the backup, with two buttons: "Yes" and "No." You can choose your option, and the window closes. If a gesture is used instead, the window automatically closes too. 
 It's a quick way to confirm whether to proceed with the backup.

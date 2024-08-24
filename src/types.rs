@@ -143,106 +143,6 @@ impl<'a> Confirm<'a> {
         }
     }
 
-    /*
-    pub fn confirm(&mut self,controller: Arc<Mutex<bool>>) -> bool {
-        let mut prec = self.mouse.get_position().unwrap();
-        let mut history = Vec::<Direction>::new();
-        let mut last: Option<Direction> = None;
-        loop {
-            let lk = controller.lock().unwrap();
-            // If backup is already in progress, exit early
-            if *lk==true {
-                return false;
-            }
-            drop(lk);
-
-            thread::sleep(std::time::Duration::from_millis(20));
-
-
-            let pos = self.mouse.get_position().unwrap();
-            if pos.x-prec.x>=0 && pos.x+prec.y-pos.y-prec.x < TOL && pos.x+prec.y-pos.y-prec.x > -TOL {
-                if last == None {
-                    self.init = Option::from(prec.clone());
-                }
-
-                // Positive
-                if pos.y-prec.y<0 {
-                    match last {
-                        Some(dir) => match dir {
-                            Direction::Positive => {
-                            },
-                            Direction::Negative => {
-                                if self.init.unwrap().x + TOL <= pos.x {
-                                    history.push(Direction::Positive);
-                                    last = Option::from(Direction::Positive);
-                                }
-                                else {
-                                    last = None;
-                                    self.init = None;
-                                    history.clear();
-                                }
-                            }
-                        }
-                        None => {
-                            history.push(Direction::Positive);
-                            last = Option::from(Direction::Positive);
-                        }
-                    }
-                }
-                // Negative
-                else if pos.y-prec.y>0 {
-                    match last {
-                        Some(dir) => match dir {
-                            Direction::Negative => {},
-                            Direction::Positive => {
-                                if self.init.unwrap().x + TOL <= pos.x {
-                                    history.push(Direction::Negative);
-                                    last = Option::from(Direction::Negative);
-                                }
-                                else {
-                                    last = None;
-                                    self.init = None;
-                                    history.clear();
-                                }
-                            }
-                        }
-                        None => {
-                            history.push(Direction::Negative);
-                            last = Option::from(Direction::Negative);
-                        }
-                    }
-                }
-            }
-            else {
-                last = None;
-                self.init = None;
-                history.clear();
-            } 
-            
-            if history.len() == 2 {
-                if history[0] == Direction::Positive && history[1] == Direction::Negative {
-                    if self.init.unwrap().y <= pos.y  { 
-                        return true;
-                    }
-                }
-                else if history[0] == Direction::Negative && history[1] == Direction::Positive {
-                    if self.init.unwrap().y >= pos.y {
-                        return false;
-                    }
-                }
-                else {
-                    last = None;
-                    self.init = None;
-                    history.clear();
-                }
-            }
-
-            prec = pos;
-        }
-    }
-    */
-
-    /* new confirm gestures */
     pub fn confirm(&mut self, controller: Arc<Mutex<bool>>) -> bool {
         let mut prec = self.mouse.get_position().unwrap();
         let mut last = None;
@@ -259,7 +159,6 @@ impl<'a> Confirm<'a> {
             thread::sleep(std::time::Duration::from_millis(100));
 
             let pos = self.mouse.get_position().unwrap();
-            
             // Confirm
             if pos.x < prec.x+TOL && pos.x > prec.x-TOL && pos.y >= prec.y {    
                 if last != Some(Direction::Positive) {
