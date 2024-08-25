@@ -25,7 +25,8 @@ impl ConfirmGui {
 
 impl eframe::App for ConfirmGui {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        //check if user instead use the gesture and close the gui
+        ctx.request_repaint();
+        // if user instead use the gesture close the gui
         {
             let guard = self.controller.lock().unwrap();
             if *guard {
@@ -62,6 +63,7 @@ pub fn run_confirm_gui(sender: Sender<Choice>,controller: Arc<Mutex<bool>>) -> R
         drag_and_drop_support: false,
         resizable: false,
         icon_data: Some(icon),
+        always_on_top: true,
         ..Default::default()
     };
 
