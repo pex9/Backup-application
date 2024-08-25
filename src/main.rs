@@ -1,5 +1,5 @@
+#![windows_subsystem = "windows"]
 mod utils;
-
 mod backup;
 mod config;
 mod config_gui;
