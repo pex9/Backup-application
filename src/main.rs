@@ -13,6 +13,7 @@ use std::{env, thread};
 use config::CONFIG_FILE_PATH;
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
+use daemonize::Daemonize;
 use mouse::Mouse;
 use utils::{abort_backup, get_screensize, perform_backup, get_abs_path};
 use winit::event_loop;
@@ -38,6 +39,7 @@ fn main_background() {
         println!("First launch of the application: no configuration found. Please run the program with the --config flag to configure it.");
         return;
     }
+    Daemonize::new().start().expect("Failed to start system daemon");
     utils::start_monitor();
     let mut mouse = Mouse::new();
     let screensize = get_screensize();
@@ -100,7 +102,7 @@ fn gui_confirmation(controller: Arc<Mutex<bool>>) {
                 }
             }
             Err(e) => {
-                println!("Backup aborted 2: {:?}", e);
+                println!("Backup aborted: {:?}", e);
                 abort_backup(controller);
                 std::process::exit(0);
             }
