@@ -9,6 +9,9 @@ edition = "2021"
 version = "0.22.1"
 features = ["highsierra"]
 
+[target.'cfg(target_os = "macos")'.dependencies]
+daemonize = "0.5.0"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 libloading = "0.6.3"
 winreg = "0.10"

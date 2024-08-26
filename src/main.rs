@@ -6,6 +6,8 @@ mod config_gui;
 mod confirm_gui;
 mod launcher;
 
+#[cfg(target_os = "macos")]
+use daemonize::Daemonize;
 
 use std::sync::{Arc, Mutex};
 use std::{env, thread};
@@ -37,6 +39,10 @@ fn main_background() {
     if !get_abs_path(CONFIG_FILE_PATH).exists() {
         println!("First launch of the application: no configuration found. Please run the program with the --config flag to configure it.");
         return;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Daemonize::new().start().expect("Failed to start system daemon");
     }
     utils::start_monitor();
     let mut mouse = Mouse::new();
@@ -100,7 +106,7 @@ fn gui_confirmation(controller: Arc<Mutex<bool>>) {
                 }
             }
             Err(e) => {
-                println!("Backup aborted 2: {:?}", e);
+                println!("Backup aborted: {:?}", e);
                 abort_backup(controller);
                 std::process::exit(0);
             }
