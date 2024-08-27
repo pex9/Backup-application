@@ -4,6 +4,7 @@ mod backup;
 mod config;
 mod config_gui;
 mod confirm_gui;
+mod error_gui;
 mod launcher;
 
 #[cfg(target_os = "macos")]
@@ -15,6 +16,7 @@ use std::{env, thread};
 use config::CONFIG_FILE_PATH;
 use config_gui::run_config_gui;
 use confirm_gui::{run_confirm_gui, Choice};
+use error_gui::run_error_gui;
 use mouse::Mouse;
 use utils::{abort_backup, get_screensize, perform_backup, get_abs_path};
 use winit::event_loop;
@@ -32,12 +34,13 @@ fn main() {
         println!("{}-{}", width, height);
     } else {
         main_background();
+        //run_error_gui("Error: You must provide a configuration using `cargo run -- --config` for the application to work.".to_string());
     }
 }
 
 fn main_background() {
     if !get_abs_path(CONFIG_FILE_PATH).exists() {
-        println!("First launch of the application: no configuration found. Please run the program with the --config flag to configure it.");
+        run_error_gui("Error: First launch of the application: no configuration found. Please run the program with the --config flag to configure it.".to_string()).expect("Failed to run error gui");
         return;
     }
     #[cfg(target_os = "macos")]

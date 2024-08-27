@@ -31,7 +31,7 @@ impl eframe::App for ConfirmGui {
             let guard = self.controller.lock().unwrap();
             if *guard {
                 _frame.close();
-                self.choice.send(Choice::CloseGui).expect("TODO: panic message");
+                self.choice.send(Choice::CloseGui).expect("GUI must be closed");
             }
         }
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -42,12 +42,12 @@ impl eframe::App for ConfirmGui {
                     ui.centered_and_justified(|ui| {
                         if ui.button("Yes").clicked() {
                             _frame.close();
-                            self.choice.send(Choice::Yes).expect("TODO: panic message");
+                            self.choice.send(Choice::Yes).expect("Backub must be started");
                         }
                         ui.add_space(4.0);
                         if ui.button("No").clicked() {
                             _frame.close();
-                            self.choice.send(Choice::No).expect("TODO: panic message");
+                            self.choice.send(Choice::No).expect("Backup must be aborted");
                         }
                     });
                 });
