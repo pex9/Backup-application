@@ -16,7 +16,7 @@ use rodio::{Decoder, OutputStream, Sink};
 use home;
 
 pub fn start_monitor() {
-    // Avvia il thread di monitoraggio CPU
+    // start monitoring
     let sys = Arc::new(Mutex::new(System::new_all()));
     let sys_clone = Arc::clone(&sys);
     thread::spawn(move || {
@@ -31,7 +31,7 @@ pub fn start_monitor() {
             .open(get_abs_path(CPU_USAGE_LOG_PATH))
             .unwrap();
         loop {
-            thread::sleep(Duration::from_secs(120)); // Attendi 2 minuti
+            thread::sleep(Duration::from_secs(120)); //wait 2 minutes
             let mut sys = sys_clone.lock().unwrap();
             sys.refresh_process(pid);
             if let Some(process) = sys.process(pid) {
@@ -104,7 +104,6 @@ pub fn get_screensize() -> (u32, u32) {
 pub fn play_sound(path: &str) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
-    // Load a sound from a file, using a path relative to Cargo.toml
     let file = File::open(get_project_path(path)).unwrap();
     let source = Decoder::new(BufReader::new(file)).unwrap();
 
@@ -122,7 +121,6 @@ pub fn load_icon(path: &str) -> Result<eframe::IconData, Box<dyn Error>> {
     let (width, height) = image.dimensions();
     let pixels = image.into_raw();
 
-    // Return the icon data
     Ok(eframe::IconData {
         rgba: pixels,
         width,

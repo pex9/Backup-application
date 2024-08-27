@@ -46,10 +46,10 @@ impl BackupConfigGUI {
             save_message: None,
             show_instructions: false,
             gif_frames,
-            current_frame_indices: vec![0; 3], // Initialize frame indices for 3 GIFs
-            last_frame_times: vec![Instant::now(); 3], // Initialize last frame times for 3 GIFs
-            frame_duration: Duration::from_millis(80), // Adjust duration for your GIFs
-            last_repaint_time: Instant::now(), // Initialize last repaint time
+            current_frame_indices: vec![0; 3],
+            last_frame_times: vec![Instant::now(); 3],
+            frame_duration: Duration::from_millis(80),
+            last_repaint_time: Instant::now(),
         }
     }
 
@@ -74,7 +74,6 @@ impl eframe::App for BackupConfigGUI {
         ctx.request_repaint();
 
         let now = Instant::now();
-        // Update GIF frames periodically
         if now.duration_since(self.last_repaint_time) >= self.frame_duration {
             self.update_gif_frames();
             self.last_repaint_time = now;
@@ -83,7 +82,6 @@ impl eframe::App for BackupConfigGUI {
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
-                    // Display the success message if it is within the desired time window
                     if let Some((message, timestamp)) = &self.save_message {
                         if timestamp.elapsed() < Duration::from_secs(3) {
                             ui.heading(message);
@@ -91,7 +89,7 @@ impl eframe::App for BackupConfigGUI {
                     }
 
                     ui.horizontal(|ui| {
-                        // Push the button to the far right
+
                         let space = egui::vec2(ui.available_width() * 0.85, 0.0);
                         ui.allocate_space(space);
 
@@ -100,18 +98,16 @@ impl eframe::App for BackupConfigGUI {
                             self.show_instructions = !self.show_instructions;
                         }
                     });
-                    ui.heading("Backup application"); // Display the heading
+                    ui.heading("Backup application");
                     if self.show_instructions {
                         for (i, (frames, text)) in self.gif_frames.iter().enumerate() {
-                            // Center each text-GIF pair horizontally
                             ui.horizontal(|ui| {
                                 ui.vertical_centered(|ui| {
-                                    // Display text above GIF
                                     ui.label(text);
                                     if let Some(frame) = frames.get(self.current_frame_indices[i]) {
                                         let size = egui::vec2(frame.width() as f32, frame.height() as f32);
                                         let texture = ctx.load_texture(
-                                            format!("instructions-gif-{}", i), // Unique texture name for each GIF
+                                            format!("instructions-gif-{}", i),
                                             frame.clone(),
                                             Default::default(),
                                         );
@@ -119,14 +115,13 @@ impl eframe::App for BackupConfigGUI {
                                     } else {
                                         ui.label("Failed to load GIF frame.");
                                     }
-                                    ui.add_space(10.0); // Add space after each GIF
+                                    ui.add_space(10.0);
                                 });
                             });
                         }
                     }
 
                     ui.add_space(5.0);
-                    // Checkbox for enabling/disabling autostart
                     ui.checkbox(&mut self.config.autostart_enabled, "Enable Autostart");
 
                     ui.add_space(5.0);
@@ -160,12 +155,11 @@ impl eframe::App for BackupConfigGUI {
                     ui.add_space(3.0);
                     ui.add(egui::TextEdit::multiline(&mut input_extensions).hint_text("Enter extensions on different lines").desired_rows(5));
 
-                    // Convert the input string back to Vec<String> when the user modifies the text area
                     if input_extensions != extensions_str {
                         self.config.excluded_extensions = input_extensions.split('\n').map(|s| s.trim().to_string()).collect();
                     }
 
-                    // Convert Vec<String> to a single string separated by ';' for displaying in TextEdit
+
                     let directories_str = self.config.excluded_directories.join("\n");
 
                     ui.label("Enter directories to exclude from backup (on different lines):");
@@ -173,14 +167,11 @@ impl eframe::App for BackupConfigGUI {
                     let mut input_directories = directories_str.clone();
                     ui.add(egui::TextEdit::multiline(&mut input_directories).hint_text("Enter directories on different lines").desired_rows(5));
 
-                    // Convert the input string back to Vec<String> when the user modifies the text area
                     if input_directories != directories_str {
                         self.config.excluded_directories = input_directories.split('\n').map(|s| s.trim().to_string()).collect();
                     }
                     ui.add_space(10.0);
-                    // Place the buttons side by side
                     ui.horizontal(|ui| {
-                        // Push the button to the far right
                         let space = egui::vec2(ui.available_width() * 0.35, 0.0);
                         ui.allocate_space(space);
                         if ui.button("Save options").clicked() {

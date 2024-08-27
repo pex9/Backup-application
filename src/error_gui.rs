@@ -23,7 +23,6 @@ impl eframe::App for ErrorGui {
                 ui.label(&self.message);
                 ui.add_space(6.0);
 
-                // "OK" button to close the window
                 if ui.button("OK").clicked() {
                     _frame.close();
                 }

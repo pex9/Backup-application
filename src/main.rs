@@ -34,7 +34,6 @@ fn main() {
         println!("{}-{}", width, height);
     } else {
         main_background();
-        //run_error_gui("Error: You must provide a configuration using `cargo run -- --config` for the application to work.".to_string());
     }
 }
 
