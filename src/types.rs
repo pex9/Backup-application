@@ -31,7 +31,7 @@ impl PartialEq for Point {
 
 impl Eq for Point {}
 
-const TOL: i32 = 40;
+const TOL: i32 = 100;
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Positive, 
