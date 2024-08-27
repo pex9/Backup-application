@@ -10,6 +10,7 @@ use std::io::BufReader;
 use std::time::{Duration, Instant};
 use image::codecs::gif::GifDecoder;
 use crate::utils::load_icon;
+use crate::utils::get_project_path;
 
 pub struct BackupConfigGUI {
     config: BackupConfig,
@@ -205,7 +206,7 @@ impl eframe::App for BackupConfigGUI {
 }
 
 fn load_gif_frames(path: &str) -> Result<Vec<ColorImage>, Box<dyn Error>> {
-    let file = File::open(path)?;
+    let file = File::open(get_project_path(path))?;
     let reader = BufReader::new(file);
     let decoder = GifDecoder::new(reader)?;
     let mut frames = decoder.into_frames();
